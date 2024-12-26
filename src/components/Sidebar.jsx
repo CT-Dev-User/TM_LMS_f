@@ -7,15 +7,25 @@ import {
   AiOutlineHeart,
   AiOutlineHistory,
 } from "react-icons/ai";
-import { FaBars, FaTimes } from "react-icons/fa"; 
+import { FaBars, FaTimes } from "react-icons/fa";
+import { MdOutlineDashboardCustomize } from "react-icons/md";
+import { NavLink } from "react-router-dom";
 
 function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
   const [isLargeScreen, setIsLargeScreen] = useState(false); // State to track if the screen is large
 
   const menuItems = [
-    { icon: <AiOutlineHeart size={24} />, label: "Wishlist" },
-    { icon: <AiOutlineHistory size={24} />, label: "Purchase History" },
+    { icon: <AiOutlineHeart size={24} />, label: "Wishlist", link: "/" },
+    {
+      icon: <AiOutlineHistory size={24} />,
+      label: "Purchase History",
+      link: "/",
+    },    
+    
+    // { icon: <AiOutlineBook size={24} />, label: "My Courses", link: "#" },
+ 
+    { icon: <MdOutlineDashboardCustomize size={24} />, label: "Dashboard", link: "/dashboard" },
   ];
 
   const courses = [
@@ -51,14 +61,6 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
 
   return (
     <>
-      {/* Overlay background */}
-      <div
-        className={`fixed inset-0 z-40   transition-opacity duration-300 ${
-          isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setIsSidebarOpen(false)}
-      ></div>
-
       {/* Sidebar */}
       <aside
         className={`fixed top-20 inset-y-0 left-0 transform ${
@@ -67,8 +69,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
           isSidebarOpen ? "w-64" : "w-16"
         }`}
         style={{
-          // Ensure the sidebar is fixed and doesn't push content to the right
-          position: "fixed", 
+          position: "fixed", // Ensures the sidebar stays fixed on the left
         }}
       >
         {/* Cross Icon (above the user image) when sidebar is open and screen is small */}
@@ -95,7 +96,8 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
         )}
 
         {/* Sidebar Menu */}
-        <nav className="flex-1 mt-4 overflow-y-auto max-h-screen"> {/* Sidebar content scrollable */}
+        <nav className="flex-1 mt-4 overflow-y-auto max-h-screen">
+          {/* Sidebar content scrollable */}
           <ul className="space-y-6">
             {/* My Courses with Dropdown */}
             <li>
@@ -136,17 +138,18 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
 
             {/* Other Menu Items */}
             {menuItems.map((item, index) => (
-              <li
-                key={index}
-                className={`flex items-center gap-4 px-4 py-2 cursor-pointer ${
-                  isSidebarOpen
-                    ? "hover:bg-indigo-600 rounded-lg"
-                    : "justify-center"
-                } transition-colors duration-300`}
-              >
-                {item.icon}
-                {isSidebarOpen && <span>{item.label}</span>}
-              </li>
+              <NavLink key={index} to={item.link}>
+                <li
+                  className={` flex items-center gap-2 px-4 py-2 cursor-pointer ${
+                    isSidebarOpen
+                      ? "hover:bg-indigo-600 rounded-lg"
+                      : "justify-center"
+                  } transition-colors duration-300`}
+                >
+                  {item.icon}
+                  {isSidebarOpen && <span>{item.label}</span>}
+                </li>
+              </NavLink>
             ))}
           </ul>
         </nav>
@@ -154,7 +157,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
 
       {/* Always Visible Icons (Collapsed Sidebar) */}
       {!isSidebarOpen && (
-        <aside className="mt-20 p-1 fixed inset-y-0 left-0 bg-indigo-700 text-white w-16 shadow-xl z-40 flex flex-col items-center py-6 space-y-6">
+        <aside className="  mt-20 p-1 fixed inset-y-0 left-0 bg-indigo-700 text-white w-16 shadow-xl z-40 flex flex-col items-center py-6 space-y-6">
           {/* Hamburger Icon visible only when sidebar is collapsed */}
           <div
             className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
@@ -163,18 +166,24 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
             <FaBars size={24} />
           </div>
 
-          {/* Other menu icons */}
-          {[...menuItems.slice(1), { icon: <AiOutlineBook size={24} /> }].map(
-            (item, index) => (
-              <div
-                key={index}
-                className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
-                onClick={() => setIsSidebarOpen(true)} // Open sidebar on click
-              >
-                {item.icon}
-              </div>
-            )
-          )}
+          {/* Other menu icons with routing */}
+          {menuItems.map((item, index) => (
+            <NavLink
+              key={index}
+              to={item.link}
+              className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
+            >
+              {item.icon}
+            </NavLink>
+          ))}
+
+          {/* My Courses Icon with dropdown toggle */}
+          <div
+            className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown
+          >
+           
+          </div>
         </aside>
       )}
     </>
