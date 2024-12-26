@@ -7,8 +7,10 @@ import {
   AiOutlineHeart,
   AiOutlineHistory,
 } from "react-icons/ai";
+import { CiMoneyCheck1 } from "react-icons/ci";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { MdOutlineDashboardCustomize } from "react-icons/md";
+import { SlCalender } from "react-icons/sl";
 import { NavLink } from "react-router-dom";
 
 function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
@@ -17,15 +19,21 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
 
   const menuItems = [
     { icon: <AiOutlineHeart size={24} />, label: "Wishlist", link: "/" },
-    {
-      icon: <AiOutlineHistory size={24} />,
-      label: "Purchase History",
-      link: "/",
-    },    
-    
+
     // { icon: <AiOutlineBook size={24} />, label: "My Courses", link: "#" },
- 
-    { icon: <MdOutlineDashboardCustomize size={24} />, label: "Dashboard", link: "/dashboard" },
+
+    {
+      icon: <MdOutlineDashboardCustomize size={24} />,
+      label: "Dashboard",
+      link: "/dashboard",
+    },
+
+    {
+      icon: <CiMoneyCheck1 size={24} />,
+      label: "Purchase History",
+      link: "/purchase-history",
+    },
+    { icon: <SlCalender size={24} />, label: "Calender", link: "/calender" },
   ];
 
   const courses = [
@@ -181,9 +189,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
           <div
             className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown
-          >
-           
-          </div>
+          ></div>
         </aside>
       )}
     </>

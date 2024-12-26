@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LoginForm from "../forms/LoginForm";
 import RegisterForm from "../forms/RegisterForm";
 import Home from "./Home";
@@ -10,9 +10,18 @@ const Auth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    // Check if user is already logged in from localStorage
+    const loggedInUser = localStorage.getItem("isAuthenticated");
+    if (loggedInUser === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogin = (email, password) => {
     if (email === "test@gmail.com" && password === "test") {
       setIsAuthenticated(true);
+      localStorage.setItem("isAuthenticated", "true"); // Save login state
       setError("");
     } else {
       setError("Invalid email or password. Please try again.");
@@ -21,8 +30,15 @@ const Auth = () => {
 
   const toggleForm = () => setIsLogin(!isLogin);
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("isAuthenticated"); // Remove login state from localStorage
+  };
+
   if (isAuthenticated) {
-    return <Home />;
+    return (
+      <Home onLogout={handleLogout} /> // Assuming you pass logout function to Home component
+    );
   }
 
   return (

@@ -2,7 +2,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useRef, useEffect } from "react";
 import VideoPlayer from "./VideoPlayer";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import clsx from 'clsx'; // Import clsx for conditional class management
 
@@ -26,10 +26,11 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
   };
 
   const navigate = useNavigate();
-  const handleBackToPlaylist = () => {
+  const handleBackToPlaylist = (e) => {
+    e.preventDefault();
     setCurrentVideo(null);
     setIsPlaying(false);
-    navigate(-1); // Navigate back to the previous screen
+    navigate(0);
   };
 
   const handleNextVideo = () => {
@@ -62,7 +63,7 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
       } relative`} // Ensure parent container has relative positioning
     >
       {/* Back Button */}
-      <button
+      <NavLink
         className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-700 text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600 z-10" // Added z-index for visibility
         onClick={handleBackToPlaylist}
       >
@@ -81,7 +82,7 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
           />
         </svg>
         <span>Back to Playlist</span>
-      </button>
+      </NavLink>
 
       {/* Video Player Section */}
       <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden shadow-lg">

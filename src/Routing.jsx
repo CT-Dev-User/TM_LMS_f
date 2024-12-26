@@ -4,6 +4,8 @@ import PropTypes from "prop-types"; // Import PropTypes
 import { Route, Routes } from "react-router-dom";
 import DashboardPage from "./Dashboard/Page";
 import Playlist from "./video functionality/PlaylistDetail";
+import CalenderComponent from "./Dashboard/CalenderComponent";
+import PurchaseHistory from "./purchase history/page";
 
 const Routing = ({ isSidebarOpen, isLargeScreen }) => {
   return (
@@ -27,6 +29,8 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
           />
         }
       />
+      <Route path="/calender" element={<CalenderComponent/>}/>
+      <Route path="/purchase-history" element={<PurchaseHistory/>}/>
       <Route path="/" element={<div>Welcome to the app!</div>} />
     </Routes>
   );
