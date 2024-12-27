@@ -29,7 +29,7 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
           />
         }
       />
-      <Route path="/calender" element={<CalenderComponent/>}/>
+      <Route path="/calendar" element={<CalenderComponent/>}/>
       <Route path="/purchase-history" element={<PurchaseHistory/>}/>
       <Route path="/" element={<div>Welcome to the app!</div>} />
     </Routes>

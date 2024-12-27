@@ -5,9 +5,12 @@ import logo from "../assets/profile.jpg";
 
 function Navbar() {
   const handleLogout = () => {
-    // Add your logout functionality here
-    console.log("Logged out!");
+    // Clear user authentication state (e.g., from localStorage or state)
+    localStorage.removeItem("isAuthenticated");
+    // Optionally redirect to login page or perform any other actions
+    window.location.href = "/dashboard"; 
   };
+  
 
   return (
     <>

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import VideoPlayer from "./VideoPlayer";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import clsx from 'clsx'; // Import clsx for conditional class management
+import clsx from "clsx"; // Import clsx for conditional class management
 
 const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -26,11 +26,20 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
   };
 
   const navigate = useNavigate();
-  const handleBackToPlaylist = (e) => {
-    e.preventDefault();
-    setCurrentVideo(null);
-    setIsPlaying(false);
-    navigate(0);
+  const handleBackToPlaylist = (lecture) => {
+    // Format the title to create a safe URL
+    const formattedTitle = lecture.title
+      .replace(/[^a-zA-Z0-9\s-]/g, "") // Remove non-alphanumeric characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .toLowerCase();
+
+    // Encode the formatted title to make sure it's URL-safe
+    const encodedTitle = encodeURIComponent(formattedTitle);
+
+    // Navigate to the playlist with the formatted title
+    navigate(`/playlist/${encodedTitle}`, {
+      state: { lecture, isSidebarOpen, isLargeScreen },
+    });
   };
 
   const handleNextVideo = () => {
@@ -53,7 +62,8 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
 
   // Safe URLs for images and videos
   const safeImageUrl = lecture.img || "https://via.placeholder.com/150";
-  const safeVideoUrl = currentVideo?.url || "https://path-to-placeholder-video.mp4";
+  const safeVideoUrl =
+    currentVideo?.url || "https://path-to-placeholder-video.mp4";
 
   return currentVideo ? (
     // Video player with playlist view
@@ -143,16 +153,30 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
     // Playlist view only
     <div
       className={`flex flex-col lg:flex-row gap-6 p-6 bg-gray-100 transition-all ${
-        isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "ml-16") : "ml-0"
+        isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "ml-0") : "ml-0"
       }`}
     >
       {/* Sidebar Section */}
       <div className="lg:w-1/3 bg-white shadow-md rounded-lg p-6">
         <button
-          className="text-indigo-600 hover:underline mb-4"
+          className=" mb-4 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-700 text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600"
           onClick={() => navigate(-1)}
         >
-          ← Back to Content
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 12H5m7-7l-7 7 7 7"
+            />
+          </svg>
+          <span>Back to Content</span>
         </button>
         <h2 className="text-2xl font-bold text-indigo-700">{lecture?.title}</h2>
         <p className="text-gray-500 mt-2">{lecture?.description}</p>

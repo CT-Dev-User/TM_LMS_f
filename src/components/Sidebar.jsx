@@ -11,43 +11,28 @@ import { CiMoneyCheck1 } from "react-icons/ci";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { MdOutlineDashboardCustomize } from "react-icons/md";
 import { SlCalender } from "react-icons/sl";
-import { NavLink } from "react-router-dom";
+import { NavLink , useNavigate } from "react-router-dom";
 
-function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
+function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
   const [isLargeScreen, setIsLargeScreen] = useState(false); // State to track if the screen is large
+  const navigate = useNavigate(); // Initialize navigate
+
 
   const menuItems = [
     { icon: <AiOutlineHeart size={24} />, label: "Wishlist", link: "/" },
-
-    // { icon: <AiOutlineBook size={24} />, label: "My Courses", link: "#" },
-
     {
       icon: <MdOutlineDashboardCustomize size={24} />,
       label: "Dashboard",
       link: "/dashboard",
     },
-
     {
       icon: <CiMoneyCheck1 size={24} />,
       label: "Purchase History",
       link: "/purchase-history",
     },
-    { icon: <SlCalender size={24} />, label: "Calender", link: "/calender" },
+    { icon: <SlCalender size={24} />, label: "Calendar", link: "/calendar" },
   ];
-
-  const courses = [
-    "React",
-    "Next.js",
-    "TypeScript",
-    "Game Development",
-    "Python Programming",
-    "JavaScript Basics",
-    "Machine Learning",
-    "Full Stack Development",
-    "Cloud Computing",
-    "AI Programming", // Added more courses for scrollable content
-  ]; // List of courses
 
   // Hook to track screen size
   useEffect(() => {
@@ -55,18 +40,22 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
       setIsLargeScreen(window.innerWidth >= 1024); // Consider "lg" screen as 1024px and above
     };
 
-    // Call the handler on mount
     handleResize();
-
-    // Set up the resize event listener
     window.addEventListener("resize", handleResize);
 
-    // Clean up the event listener on component unmount
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  // Handle course navigation
+  const handleCourseClick = (lecture) => {
+    const formattedTitle = lecture.title
+      .replace(/[^a-zA-Z0-9\s-]/g, "") // Remove non-alphanumeric characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .toLowerCase();
 
+    navigate(`/playlist/${formattedTitle}`, { state: { lecture ,isSidebarOpen, isLargeScreen } });
+  };
   return (
     <>
       {/* Sidebar */}
@@ -76,21 +65,18 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
         } transition-transform duration-500 ease-in-out bg-indigo-700 text-white shadow-xl z-50 flex flex-col ${
           isSidebarOpen ? "w-64" : "w-16"
         }`}
-        style={{
-          position: "fixed", // Ensures the sidebar stays fixed on the left
-        }}
       >
-        {/* Cross Icon (above the user image) when sidebar is open and screen is small */}
+        {/* Close Icon for Small Screens */}
         {!isLargeScreen && isSidebarOpen && (
           <div
             className="absolute top-4 right-4 text-2xl cursor-pointer text-white"
-            onClick={() => setIsSidebarOpen(false)} // Close sidebar on click
+            onClick={() => setIsSidebarOpen(false)}
           >
             <FaTimes />
           </div>
         )}
 
-        {/* User Profile */}
+        {/* User Profile Section */}
         {isSidebarOpen && (
           <div className="p-6 text-center">
             <img
@@ -104,16 +90,15 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
         )}
 
         {/* Sidebar Menu */}
-        <nav className="flex-1 mt-4 overflow-y-auto max-h-screen">
-          {/* Sidebar content scrollable */}
+        <nav className=" flex-1 mt-4 overflow-y-auto max-h-screen">
           <ul className="space-y-6">
-            {/* My Courses with Dropdown */}
+            {/* My Courses Dropdown */}
             <li>
               <div
-                className="flex items-center justify-between gap-4 px-4 py-2 cursor-pointer hover:bg-indigo-600 rounded-lg transition-all duration-300"
+                className=" flex items-center justify-between gap-4 px-4 py-2 cursor-pointer hover:bg-indigo-600 rounded-lg transition-all duration-300"
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
               >
-                <div className="flex items-center gap-4">
+                <div className="mb-1  flex items-center gap-4">
                   <AiOutlineBook size={24} />
                   {isSidebarOpen && <span>My Courses</span>}
                 </div>
@@ -127,18 +112,18 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
                   </span>
                 )}
               </div>
-              {/* Dropdown with Custom Scroll */}
               <ul
-                className={`pl-8 mt-2 space-y-2 transition-all duration-500 ease-in-out ${
+                className={`mb-2 ml-2 pl-2 mt-2 space-y-2 transition-all duration-500 ease-in-out ${
                   isDropdownOpen && isSidebarOpen ? "max-h-64" : "max-h-0"
                 } overflow-y-auto scrollbar-hidden`}
               >
-                {courses.map((course, index) => (
+                {lectures.map((lecture) => (
                   <li
-                    key={index}
-                    className="cursor-pointer px-4 py-2 bg-indigo-800 hover:bg-indigo-600 rounded-lg transition-colors duration-300 shadow-md"
+                    key={lectures.id}
+                    className="mr-2 cursor-pointer px-4 py-2 bg-indigo-800 hover:bg-indigo-600 rounded-lg transition-colors duration-300 shadow-md"
+                    onClick={() => handleCourseClick(lecture)}
                   >
-                    {course}
+                    {lecture.title}
                   </li>
                 ))}
               </ul>
@@ -148,7 +133,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
             {menuItems.map((item, index) => (
               <NavLink key={index} to={item.link}>
                 <li
-                  className={` flex items-center gap-2 px-4 py-2 cursor-pointer ${
+                  className={`mb-1 pb-3 flex items-center gap-2 px-4 py-2 cursor-pointer ${
                     isSidebarOpen
                       ? "hover:bg-indigo-600 rounded-lg"
                       : "justify-center"
@@ -163,18 +148,16 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
         </nav>
       </aside>
 
-      {/* Always Visible Icons (Collapsed Sidebar) */}
+      {/* Collapsed Sidebar Icons */}
       {!isSidebarOpen && (
-        <aside className="  mt-20 p-1 fixed inset-y-0 left-0 bg-indigo-700 text-white w-16 shadow-xl z-40 flex flex-col items-center py-6 space-y-6">
-          {/* Hamburger Icon visible only when sidebar is collapsed */}
+        <aside className="mt-20 p-1 fixed inset-y-0 left-0 bg-indigo-700 text-white w-16 shadow-xl z-40 flex flex-col items-center py-6 space-y-6">
           <div
             className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
-            onClick={() => setIsSidebarOpen(true)} // Open sidebar on click
+            onClick={() => setIsSidebarOpen(true)}
           >
             <FaBars size={24} />
           </div>
 
-          {/* Other menu icons with routing */}
           {menuItems.map((item, index) => (
             <NavLink
               key={index}
@@ -184,12 +167,6 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
               {item.icon}
             </NavLink>
           ))}
-
-          {/* My Courses Icon with dropdown toggle */}
-          <div
-            className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-indigo-600 rounded-lg transition-colors duration-300"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown
-          ></div>
         </aside>
       )}
     </>
