@@ -1,6 +1,6 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   FaPlay,
   FaPause,
@@ -10,6 +10,7 @@ import {
   FaVolumeMute,
   FaVolumeUp,
 } from "react-icons/fa";
+
 export default function VideoPlayer({
   videoUrl,
   thumbnailUrl,
@@ -25,6 +26,16 @@ export default function VideoPlayer({
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [videoError, setVideoError] = useState(false);
+
+  // Reset video playback when videoUrl changes
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.load(); // Reload the video
+      setIsPlaying(false);
+      setProgress(0);
+    }
+  }, [videoUrl]);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -63,14 +74,14 @@ export default function VideoPlayer({
   };
 
   return (
-    <div className="relative flex flex-col w-full lg:h-[70vh] h-full rounded-lg overflow-hidden shadow-lg transition-all duration-300">
+    <div className="relative flex flex-col w-full lg:h-[70vh] h-full rounded-lg overflow-hidden shadow-lg transition-all duration-300 bg-black">
       {/* Video Section */}
       {videoUrl && !videoError ? (
         <video
           ref={videoRef}
           src={videoUrl}
           poster={thumbnailUrl}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover rounded-lg transition-all duration-500 ease-in-out"
           onClick={handlePlayPause}
           onTimeUpdate={handleProgress}
           controlsList="nodownload"
@@ -87,7 +98,7 @@ export default function VideoPlayer({
       )}
 
       {/* Custom Controls */}
-      <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-3 p-4 bg-gradient-to-t from-black via-gray-900 to-transparent">
+      <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-3 p-4 bg-gradient-to-t from-black via-gray-900 to-transparent  bg-opacity-50 rounded-lg">
         {/* Progress Bar */}
         <input
           type="range"
@@ -103,24 +114,24 @@ export default function VideoPlayer({
           <div className="flex items-center gap-4">
             <button
               onClick={onPrevious}
-              className="p-2 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all"
+              className="hidden lg:flex p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all transform hover:scale-110"
               aria-label="Previous Video"
             >
               <FaStepBackward size={20} />
             </button>
             <button
               onClick={handlePlayPause}
-              className="p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all"
+              className="p-2 sm:p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all transform hover:scale-110"
               aria-label={isPlaying ? "Pause Video" : "Play Video"}
             >
-              {isPlaying ? <FaPause size={20} /> : <FaPlay size={20} />}
+              {isPlaying ? <FaPause size={16} sm:size={20} /> : <FaPlay size={16} sm:size={20} />}
             </button>
             <button
               onClick={onNext}
-              className="p-2 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all"
+              className="p-2 sm:p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all transform hover:scale-110"
               aria-label="Next Video"
             >
-              <FaStepForward size={20} />
+              <FaStepForward size={16} sm:size={20} />
             </button>
           </div>
 
@@ -128,33 +139,29 @@ export default function VideoPlayer({
           <div className="flex items-center gap-4">
             <button
               onClick={handleMute}
-              className="p-2 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all"
+              className="hidden lg:flex p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all transform hover:scale-110"
               aria-label={isMuted ? "Unmute Video" : "Mute Video"}
             >
               {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
             </button>
             <button
               onClick={handleFullscreen}
-              className="p-2 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all"
+              className="p-2 sm:p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all transform hover:scale-110"
               aria-label="Fullscreen Video"
             >
-              <FaExpand size={20} />
+              <FaExpand size={16} sm:size={20} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Title and Next Video Section */}
-      <div className="flex flex-col gap-4 mt-4">
-        {/* Video Title */}
-        <div className="px-4 py-2 bg-gray-800 text-white rounded-md shadow-md">
-          <h4 className="text-xl font-semibold">{title}</h4>
-          <p className="text-sm text-gray-400">Duration: {duration}</p>
-        </div>
+      <div className="flex flex-col gap-4 mt-4 px-4">
+      
 
         {/* Next Video Info */}
         {nextVideoTitle && (
-          <div className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-md">
+          <div className="px-4 py-2 bg-gray-900 text-white rounded-md shadow-lg">
             <h5 className="text-lg font-medium">Up Next:</h5>
             <p className="text-sm">
               <strong>{nextVideoTitle}</strong> - {nextVideoDuration}
