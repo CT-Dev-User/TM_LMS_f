@@ -15,6 +15,7 @@ const PlaylistDetail = ({
   const videoRef = useRef(null);
   const location = useLocation();
   const lecture = location.state?.lecture; // Access the lecture from state safely
+  const [controlsVisible, setControlsVisible] = useState(true); // New state for controls visibility
 
   useEffect(() => {
     if (lecture?.videos?.length > 0) {
@@ -25,8 +26,17 @@ const PlaylistDetail = ({
   useEffect(() => {
     if (currentVideo && videoRef.current) {
       setIsPlaying(true);
+      // Hide controls after a delay if video starts playing
+      if (videoRef.current.currentTime > 0) {
+        setTimeout(() => {
+          setControlsVisible(false);
+        }, 3000); // Hide controls after 3 seconds
+      } else {
+        setControlsVisible(true); // Show controls if video is paused or just started
+      }
     } else {
       setIsPlaying(false);
+      setControlsVisible(true); // Always show controls when no video is playing
     }
   }, [currentVideo]);
 
@@ -55,21 +65,31 @@ const PlaylistDetail = ({
     }
   };
 
+  // Show controls on mouse movement
+  const handleMouseMove = () => {
+    setControlsVisible(true);
+    clearTimeout(); // Clear any existing timeout for hiding controls
+    if (isPlaying) {
+      setTimeout(() => {
+        setControlsVisible(false);
+      }, 3000); // Re-hide controls after 3 seconds if playing
+    }
+  };
+
   // Safe URLs for images and videos
   const safeImageUrl = lecture?.img || "https://via.placeholder.com/150";
   const safeVideoUrl =
     currentVideo?.url || "https://path-to-placeholder-video.mp4";
 
   return currentVideo ? (
-    // Video player with playlist view
     <div
-      className={`flex flex-col lg:flex-row gap-6 p-6 bg-gray-900 transition-all ${isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "") : "ml-0"} relative`} // Ensure parent container has relative positioning
+      className={`flex flex-col lg:flex-row gap-6 p-6 bg-gray-900 transition-all ${isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "") : "ml-0"} relative`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => isPlaying && setControlsVisible(false)} // Hide controls when mouse leaves
     >
       {/* Back Button */}
       <NavLink
-        className={`absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-700 text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600 z-10 ${
-          isLargeScreen ? "lg:flex" : "sm:flex"
-        }`}
+        className={`absolute top-6 left-6 flex items-center gap-2 px-2 py-2 bg-gradient-to-r text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600 z-10 ${isLargeScreen ? "lg:flex" : "sm:flex"} ${controlsVisible ? 'opacity-100' : 'opacity-0'}`}
         onClick={handleBackToPlaylist}
       >
         <svg
@@ -102,7 +122,7 @@ const PlaylistDetail = ({
           isPlaying={isPlaying}
           setIsPlaying={setIsPlaying}
         />
-        <div className="mt-4 p-4 bg-gray-900 text-white rounded-lg shadow-md">
+        <div className="p-4 bg-gray-900 text-white rounded-lg shadow-md">
           <h2 className="text-xl font-bold">{currentVideo.title}</h2>
           <p className="text-sm text-gray-400">
             Duration: {currentVideo.duration}
@@ -111,31 +131,35 @@ const PlaylistDetail = ({
       </div>
 
       {/* Playlist Section */}
-      <div className=" lg:w-1/2.5 bg-gray-100 p-6 rounded-lg shadow-lg overflow-y-auto max-h-[60vh] sm:max-h-[50vh]">
-        <h3 className="text-xl font-semibold text-indigo-700 mb-4">
+      <div className="bg-gray-100 p-4 rounded-lg shadow-lg overflow-y-auto max-h-[60vh] sm:max-h-[50vh]">
+        <h3 className="text-xl font-semibold text-indigo-700 mb-4 text-center">
           Videos in Playlist
         </h3>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-3">
           {lecture.videos.map((video) => (
             <div
               key={video.id}
               className={clsx(
-                "flex items-center gap-4 p-4 bg-white shadow-md rounded-lg hover:shadow-lg transition cursor-pointer",
-                { "bg-indigo-100": video.id === currentVideo.id }
+                "flex items-center gap-3 p-3 bg-white shadow-md rounded-lg transition cursor-pointer",
+                "hover:shadow-lg hover:bg-indigo-50",
+                {
+                  "relative after:absolute after:inset-0 after:bg-black after:opacity-20 after:rounded-lg": video.id === currentVideo.id,
+                }
               )}
               onClick={() => setCurrentVideo(video)}
             >
-              <div
-                className="w-24 h-20 rounded-lg"
+              {/* Show image only on larger screens */}
+              <div className="hidden sm:block w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden"
                 style={{
                   backgroundImage: `url(${safeImageUrl})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
               ></div>
-              <div>
-                <h4 className="text-lg font-semibold">{video.title}</h4>
-                <p className="text-sm text-gray-500">Duration: {video.duration}</p>
+              {/* Text for title and duration */}
+              <div className="flex-1">
+                <h4 className="text-base sm:text-lg font-semibold overflow-hidden break-words">{video.title}</h4>
+                <p className="text-xs sm:text-sm text-gray-500">Duration: {video.duration}</p>
               </div>
             </div>
           ))}

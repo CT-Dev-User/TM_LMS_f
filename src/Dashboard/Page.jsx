@@ -59,7 +59,8 @@ const DashboardPage = () => {
       about: "This course introduces the basics of machine learning, including supervised learning, and how to implement ML algorithms.",
       videos: [
         { id: 1, title: "Video 1: Introduction to ML", duration: "18:10", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
-        { id: 2, title: "Video 2: Supervised Learning", duration: "16:30", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+        { id: 2, title: "Video 2: Supervised Learning", duration: "16:30", url: vid },
+        { id: 3, title: "Video 3: Introduction to ML", duration: "18:10", url: "" },
       ],
     },
     {
