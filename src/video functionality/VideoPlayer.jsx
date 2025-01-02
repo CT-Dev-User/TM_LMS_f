@@ -214,62 +214,30 @@ export default function VideoPlayer({
 
   useEffect(() => {
     if (isMounted) {
-      if (isFullscreen) {
-        document.addEventListener("keydown", handleSeekByArrowKeys);
-      } else {
-        document.removeEventListener("keydown", handleSeekByArrowKeys);
-      }
+      document.addEventListener("keydown", handleSeekByArrowKeys);
     }
     return () => {
       if (isMounted) {
         document.removeEventListener("keydown", handleSeekByArrowKeys);
       }
     };
-  }, [isFullscreen, isMounted]);
+  }, [isMounted]);
 
   const handleNextVideo = () => {
-    onNext();
-    if (isPipActive && videoRef.current) {
-      // Stop the current PIP session
-      videoRef.current
-        .exitPictureInPicture()
-        .then(() => {
-          // Reload the video to ensure the new source is recognized
-          videoRef.current.load();
-          // Start PIP again for the new video
-          videoRef.current.requestPictureInPicture();
-        })
-        .catch((error) => {
-          console.error("Error stopping PIP:", error);
-        });
-    }
+    onNext(); // Calls the onNext function passed as a prop to play the next video
     setControlsVisible(true); // Show controls on next video
   };
 
   const handlePreviousVideo = () => {
-    onPrevious();
-    if (isPipActive && videoRef.current) {
-      // Similar logic as above for previous video
-      videoRef.current
-        .exitPictureInPicture()
-        .then(() => {
-          videoRef.current.load();
-          videoRef.current.requestPictureInPicture();
-        })
-        .catch((error) => {
-          console.error("Error stopping PIP:", error);
-        });
-    }
+    onPrevious(); // Calls the onPrevious function passed as a prop to play the previous video
     setControlsVisible(true); // Show controls on previous video
   };
 
-  // Automatically play the next video when the current video ends, only if in fullscreen
+  // Automatically play the next video when the current video ends
   useEffect(() => {
     if (videoRef.current && isMounted) {
       const handleVideoEnd = () => {
-        if (isFullscreen && nextVideoTitle) {
-          handleNextVideo();
-        }
+        handleNextVideo(); // Calls the onNext function when video ends
       };
       videoRef.current.addEventListener("ended", handleVideoEnd);
       return () => {
@@ -278,7 +246,7 @@ export default function VideoPlayer({
         }
       };
     }
-  }, [isFullscreen, nextVideoTitle, isMounted]);
+  }, [isMounted]);
 
   // Error handling for video loading
   const handleVideoError = () => {
@@ -402,29 +370,12 @@ export default function VideoPlayer({
             <button
               onClick={handleFullscreen}
               className="p-2 sm:p-3 rounded-full bg-gray-700 hover:bg-indigo-600 transition-all transform hover:scale-105"
-              aria-label="Fullscreen Video"
+              aria-label="Toggle Fullscreen"
             >
               <FaExpand size={16} sm:size={20} />
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Title and Next Video Section */}
-      <div
-        className={`flex flex-col gap-2 sm:gap-4 mt-4 px-4 sm:px-6 transition-opacity duration-200 ${
-          controlsVisible || !isPlaying ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {/* Next Video Info */}
-        {nextVideoTitle && (
-          <div className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-900 text-white rounded-md shadow-lg">
-            <h5 className="text-sm sm:text-lg font-medium">Up Next:</h5>
-            <p className="text-xs sm:text-sm">
-              <strong>{nextVideoTitle}</strong> - {nextVideoDuration}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

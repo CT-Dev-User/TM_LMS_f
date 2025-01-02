@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import React from "react";
 import PropTypes from "prop-types"; // Import PropTypes
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardPage from "./Dashboard/Page";
 import Playlist from "./video functionality/PlaylistDetail";
 import CalenderComponent from "./Dashboard/CalenderComponent";
@@ -11,7 +11,7 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
   return (
     <Routes>
       <Route
-        path="/dashboard"
+        path="/dashboard" 
         element={
           <DashboardPage
             isSidebarOpen={isSidebarOpen}
@@ -31,7 +31,7 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
       />
       <Route path="/calendar" element={<CalenderComponent/>}/>
       <Route path="/purchase-history" element={<PurchaseHistory/>}/>
-      <Route path="/" element={<div>Welcome to the app!</div>} />
+      <Route path="/" element={<Navigate to='/dashboard'/>} />
     </Routes>
   );
 };
