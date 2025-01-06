@@ -82,34 +82,35 @@ const Home = () => {
 
 
   
-// Disable right-click and developer tools
-  useEffect(() => {
-    const disableRightClick = (e) => {
-      e.preventDefault();
-    };
+// // ------------- Disable right-click and developer tools ---------------//
 
-    const blockDevToolsShortcuts = (e) => {
-      // Disable F12, Ctrl+Shift+I, and Ctrl+Shift+J
-      if (
-        (e.key === "F12") ||
-        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J"))
-      ) {
-        e.preventDefault();
-      }
-    };
+//   useEffect(() => {
+//     const disableRightClick = (e) => {
+//       e.preventDefault();
+//     };
 
-    // Disable right-click
-    document.addEventListener("contextmenu", disableRightClick);
+//     const blockDevToolsShortcuts = (e) => {
+//       // Disable F12, Ctrl+Shift+I, and Ctrl+Shift+J
+//       if (
+//         (e.key === "F12") ||
+//         (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J"))
+//       ) {
+//         e.preventDefault();
+//       }
+//     };
 
-    // Block developer tools shortcuts
-    document.addEventListener("keydown", blockDevToolsShortcuts);
+//     // Disable right-click
+//     document.addEventListener("contextmenu", disableRightClick);
 
-    // Cleanup listeners when component is unmounted
-    return () => {
-      document.removeEventListener("contextmenu", disableRightClick);
-      document.removeEventListener("keydown", blockDevToolsShortcuts);
-    };
-  }, []);
+//     // Block developer tools shortcuts
+//     document.addEventListener("keydown", blockDevToolsShortcuts);
+
+//     // Cleanup listeners when component is unmounted
+//     return () => {
+//       document.removeEventListener("contextmenu", disableRightClick);
+//       document.removeEventListener("keydown", blockDevToolsShortcuts);
+//     };
+//   }, []);
   
 
   useEffect(() => {

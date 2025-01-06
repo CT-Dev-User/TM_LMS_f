@@ -5,18 +5,16 @@ import VideoPlayer from "./VideoPlayer";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import clsx from "clsx"; // Import clsx for conditional class management
+import VideoContent from "./VideoContent";
 
-const PlaylistDetail = ({
-  isSidebarOpen,
-  isLargeScreen,
-}) => {
+const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
   const [currentVideo, setCurrentVideo] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
   const location = useLocation();
+  const [activeSection, setActiveSection] = useState("summary");
   const lecture = location.state?.lecture; // Access the lecture from state safely
   const [controlsVisible, setControlsVisible] = useState(true); // New state for controls visibility
-
   useEffect(() => {
     if (lecture?.videos?.length > 0) {
       setCurrentVideo(lecture.videos[0]);
@@ -46,35 +44,7 @@ const PlaylistDetail = ({
     setIsPlaying(false);
     navigate(-1);
   };
-  // Disable right-click and developer tools
-  // useEffect(() => {
-  //   const disableRightClick = (e) => {
-  //     e.preventDefault();
-  //   };
 
-  //   const blockDevToolsShortcuts = (e) => {
-  //     // Disable F12, Ctrl+Shift+I, and Ctrl+Shift+J
-  //     if (
-  //       (e.key === "F12") ||
-  //       (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J"))
-  //     ) {
-  //       e.preventDefault();
-  //     }
-  //   };
-
-  //   // Disable right-click
-  //   document.addEventListener("contextmenu", disableRightClick);
-
-  //   // Block developer tools shortcuts
-  //   document.addEventListener("keydown", blockDevToolsShortcuts);
-
-  //   // Cleanup listeners when component is unmounted
-  //   return () => {
-  //     document.removeEventListener("contextmenu", disableRightClick);
-  //     document.removeEventListener("keydown", blockDevToolsShortcuts);
-  //   };
-  // }, []);
-  
   const handleNextVideo = () => {
     const currentIndex = lecture.videos.findIndex(
       (video) => video.id === currentVideo.id
@@ -111,13 +81,17 @@ const PlaylistDetail = ({
 
   return currentVideo ? (
     <div
-      className={`flex flex-col lg:flex-row gap-6 p-6 bg-gray-900 transition-all ${isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "") : "ml-0"} relative`}
+      className={` rounded-lg  flex flex-col lg:flex-row gap-6 p-2 pt-4 pb-2 bg-gray-900 transition-all ${
+        isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "") : "ml-0"
+      } relative`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setControlsVisible(false)} // Hide controls when mouse leaves
     >
       {/* Back Button */}
       <NavLink
-        className={`absolute top-6 left-6 flex items-center gap-2 px-2 py-2 bg-gradient-to-r text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600 z-10 ${isLargeScreen ? "lg:flex" : "sm:flex"} ${controlsVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute top-5 left-3 flex items-center gap-2 px-2 py-2 bg-gradient-to-r text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600 z-10 ${
+          isLargeScreen ? "lg:flex" : "sm:flex"
+        } ${controlsVisible ? "opacity-100" : "opacity-0"}`}
         onClick={handleBackToPlaylist}
       >
         <svg
@@ -138,7 +112,10 @@ const PlaylistDetail = ({
       </NavLink>
 
       {/* Video Player Section */}
-      <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+      <div
+        className="flex-1 bg-gray-800 rounded-lg overflow-hidden shadow-lg relative"
+        onMouseMove={() => setControlsVisible(true)} // Show controls when mouse moves over video
+      >
         <VideoPlayer
           ref={videoRef}
           videoUrl={safeVideoUrl}
@@ -156,6 +133,12 @@ const PlaylistDetail = ({
             Duration: {currentVideo.duration}
           </p>
         </div>
+
+        <VideoContent
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          lecture={lecture}
+        />
       </div>
 
       {/* Playlist Section */}
@@ -171,13 +154,15 @@ const PlaylistDetail = ({
                 "flex items-center gap-3 p-3 bg-white shadow-md rounded-lg transition cursor-pointer",
                 "hover:shadow-lg hover:bg-indigo-50",
                 {
-                  "relative after:absolute after:inset-0 after:bg-black after:opacity-20 after:rounded-lg": video.id === currentVideo.id,
+                  "relative after:absolute after:inset-0 after:bg-black after:opacity-20 after:rounded-lg":
+                    video.id === currentVideo.id,
                 }
               )}
               onClick={() => setCurrentVideo(video)}
             >
               {/* Show image only on larger screens */}
-              <div className="hidden sm:block w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden"
+              <div
+                className="hidden sm:block w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden"
                 style={{
                   backgroundImage: `url(${safeImageUrl})`,
                   backgroundSize: "cover",
@@ -186,8 +171,12 @@ const PlaylistDetail = ({
               ></div>
               {/* Text for title and duration */}
               <div className="flex-1">
-                <h4 className="text-base sm:text-lg font-semibold overflow-hidden break-words">{video.title}</h4>
-                <p className="text-xs sm:text-sm text-gray-500">Duration: {video.duration}</p>
+                <h4 className="text-base sm:text-lg font-semibold overflow-hidden break-words">
+                  {video.title}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Duration: {video.duration}
+                </p>
               </div>
             </div>
           ))}

@@ -266,14 +266,17 @@ export default function VideoPlayer({
 
   return (
     <div
-      className="relative flex flex-col w-full h-full rounded-lg overflow-hidden shadow-lg transition-all duration-300 bg-black"
+      className="relative flex flex-col w-full rounded-lg overflow-hidden shadow-lg transition-all duration-300 bg-black"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => !isPlaying && setControlsVisible(false)}
     >
       {/* Video Section */}
       <div
         className="relative w-full pb-[86.25%] sm:pb-[76.25%] md:pb-[56.25%] lg:h-[71vh]"
-        style={{ maxHeight: isFullscreen ? "100vh" : "auto" }}
+        style={{ 
+          maxHeight: isFullscreen ? "100vh" : "auto",
+          height: isFullscreen ? "100vh" : "auto" // For small screens in full-screen
+        }}
       >
         {videoUrl && !videoError ? (
           <video
@@ -281,7 +284,7 @@ export default function VideoPlayer({
             src={videoUrl}
             poster={thumbnailUrl}
             className={`absolute top-0 left-0 w-full h-full object-contain ${
-              isFullscreen ? "object-cover" : ""
+              isFullscreen ? "object-cover sm:object-contain" : ""
             }`}
             onClick={handlePlayPause}
             onTimeUpdate={handleProgress}
