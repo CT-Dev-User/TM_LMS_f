@@ -7,7 +7,7 @@ import Playlist from "./video functionality/PlaylistDetail";
 import CalenderComponent from "./Dashboard/CalenderComponent";
 import PurchaseHistory from "./purchase history/page";
 
-const Routing = ({ isSidebarOpen, isLargeScreen }) => {
+const Routing = ({ isSidebarOpen, isLargeScreen, lectures }) => {
   return (
     <Routes>
       <Route
@@ -16,6 +16,7 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
           <DashboardPage
             isSidebarOpen={isSidebarOpen}
             isLargeScreen={isLargeScreen}
+            lectures={lectures}
           />
         }
       />
@@ -24,8 +25,8 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
         path="/playlist/:courseTitle"
         element={
           <Playlist     
-          isSidebarOpen={isSidebarOpen}
-          isLargeScreen={isLargeScreen}  
+            isSidebarOpen={isSidebarOpen}
+            isLargeScreen={isLargeScreen} 
           />
         }
       />
@@ -38,8 +39,9 @@ const Routing = ({ isSidebarOpen, isLargeScreen }) => {
 
 // Define PropTypes for Routing
 Routing.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired, // Ensure it's a required boolean
-  isLargeScreen: PropTypes.bool.isRequired, // Ensure it's a required boolean
+  isSidebarOpen: PropTypes.bool.isRequired, 
+  isLargeScreen: PropTypes.bool.isRequired,
+  lectures: PropTypes.array.isRequired // Add this prop type check
 };
 
 export default Routing;

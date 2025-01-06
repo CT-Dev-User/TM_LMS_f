@@ -18,7 +18,7 @@ export default function VideoContent({
     <div className="mt-2 flex justify-center px-2 sm:px-4">
       <div className="w-full max-w-4xl">
         {/* Navigation Buttons for larger screens */}
-        <div className="hidden sm:flex justify-center mb-4 space-x-8">
+        <div className="hidden sm:flex justify-start mb-4 space-x-4 border-b-2 border-gray-200">
           {[
             {
               section: "summary",
@@ -28,7 +28,7 @@ export default function VideoContent({
             {
               section: "live-class",
               icon: <PiVideoCameraFill />,
-              text: "Live Class",
+              text: "Live class",
             },
             { section: "assignment", icon: <FaFileAlt />, text: "Assignment" },
             { section: "forum", icon: <PiChats />, text: "Forum" },
@@ -36,10 +36,10 @@ export default function VideoContent({
             <button
               key={section}
               onClick={() => setActiveSection(section)}
-              className={`flex items-center gap-2 px-3 py-2 text-sm sm:text-base rounded-full transition-all duration-300 ease-in-out transform hover:scale-105 ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm sm:text-base font-medium transition-all duration-300 ${
                 activeSection === section
-                  ? "bg-blue-500 text-white shadow-lg"
-                  : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                  ? "text-purple-500 border-b-2 border-purple-500"
+                  : "text-gray-100 hover:text-purple-400"
               }`}
             >
               {icon}
@@ -56,7 +56,7 @@ export default function VideoContent({
             className="w-full mt-2 p-2 border border-gray-300 rounded-lg bg-gray-700 text-white"
           >
             <option value="summary">Summary</option>
-            <option value="live-class">Live Class</option>
+            <option value="live-class">Live class</option>
             <option value="assignment">Assignment</option>
             <option value="forum">Forum</option>
           </select>

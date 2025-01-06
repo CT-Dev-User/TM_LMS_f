@@ -135,8 +135,8 @@ const Home = () => {
             <Sidebar
               isSidebarOpen={isSidebarOpen || isLargeScreen}
               setIsSidebarOpen={setIsSidebarOpen}
-              user={user}
-              lectures={lectures}
+              user={user}   
+              lectures={lectures}     
             />
           </div>
         
@@ -145,6 +145,8 @@ const Home = () => {
           <Routing
             isSidebarOpen={isSidebarOpen}
             isLargeScreen={isLargeScreen}
+            lectures={lectures}
+
           />
         </main>
       </div>
