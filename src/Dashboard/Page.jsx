@@ -26,7 +26,7 @@ const DashboardPage = ({lectures}) => {
   }, []);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full">
       {/* Stats */}
       <div className=" w-full mt-4 mb-10 flex flex-wrap gap-4 md:gap-2 lg:gap-4">
         <div className="w-full md:w-[48%] lg:w-[23%] px-3 shadow-md py-4 rounded-md border flex items-center gap-2 justify-between">

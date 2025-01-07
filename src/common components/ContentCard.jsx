@@ -19,9 +19,7 @@ function ContentCard({ lectures, onLectureClick, isSidebarOpen, isLargeScreen })
 
   return (
     <div
-      className={` grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${
-        !isSidebarOpen ? "ml-16" : ""
-      }`}
+      className={`grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 gap-6 ${!isSidebarOpen ? "ml-16" : ""}`}
     >
       {lectures.map((lecture) => {
         const progress = lecture.progress || 0; // Default progress to 0 if undefined
@@ -40,17 +38,17 @@ function ContentCard({ lectures, onLectureClick, isSidebarOpen, isLargeScreen })
               className="w-full h-48 object-cover rounded-t-lg"
             />
             <div className="p-4">
-              <h3 className="text-xl font-semibold text-indigo-700 mb-2">
+              <h3 className="text-xl font-semibold text-indigo-700 mb-2 ipadpro:text-lg">
                 {lecture.title}
               </h3>
-              <p className="text-gray-500 text-sm mb-4">{lecture.description}</p>
+              <p className="text-gray-500 text-sm mb-4 ipadpro:text-xs">{lecture.description}</p>
 
               <div className="relative pt-1">
                 <div className="flex mb-2 items-center justify-between">
-                  <span className="text-xs font-semibold inline-block py-1 uppercase">
+                  <span className="text-xs font-semibold inline-block py-1 uppercase ipadpro:text-[0.65rem]">
                     Progress
                   </span>
-                  <span className="text-xs font-semibold inline-block py-1 uppercase">
+                  <span className="text-xs font-semibold inline-block py-1 uppercase ipadpro:text-[0.65rem]">
                     {progress}%
                   </span>
                 </div>

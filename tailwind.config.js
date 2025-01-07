@@ -1,15 +1,4 @@
 /* eslint-disable no-undef */
-// /** @type {import('tailwindcss').Config} */
-// export default {
-//   content: [
-//     "./index.html",
-//     "./src/**/*.{js,ts,jsx,tsx}",
-//   ],
-//   theme: {
-//     extend: {},
-//   },
-//   plugins: [],
-// }
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -27,6 +16,12 @@ export default {
           "100%": { opacity: 1, transform: "scale(1)" },
         },
       },
+      screens: {
+        // Custom breakpoint for iPad Pro in portrait mode
+        'ipadpro': {'min': '1024px', 'max': '1366px'},
+        // You can also define landscape mode if needed
+        'ipadpro-landscape': {'min': '1366px', 'max': '1024px'},
+      }
     },
   },
   plugins: [

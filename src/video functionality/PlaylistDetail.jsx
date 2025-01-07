@@ -83,7 +83,7 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
     <div
       className={` rounded-lg  flex flex-col lg:flex-row gap-6 p-2 pt-4 pb-2 bg-gray-900 transition-all ${
         isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "") : "ml-0"
-      } relative`}
+      } relative ipadpro:flex-col`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setControlsVisible(false)} // Hide controls when mouse leaves
     >
@@ -91,7 +91,7 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
       <NavLink
         className={`absolute top-5 left-3 flex items-center gap-2 px-2 py-2 bg-gradient-to-r text-white font-semibold rounded-lg shadow-md transition hover:from-indigo-600 z-10 ${
           isLargeScreen ? "lg:flex" : "sm:flex"
-        } ${controlsVisible ? "opacity-100" : "opacity-0"}`}
+        } ipadpro:flex ${controlsVisible ? "opacity-100" : "opacity-0"}`}
         onClick={handleBackToPlaylist}
       >
         <svg
@@ -108,12 +108,12 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
             d="M19 12H5m7-7l-7 7 7 7"
           />
         </svg>
-        <span className="hidden lg:inline-block">Back to Playlist</span>
+        <span className="hidden lg:inline-block ipadpro:hidden">Back to Playlist</span>
       </NavLink>
 
       {/* Video Player Section */}
       <div
-        className="flex-1 bg-gray-800 rounded-lg overflow-hidden shadow-lg relative"
+        className="flex-1 bg-gray-800 rounded-lg overflow-hidden shadow-lg relative ipadpro:mb-4"
         onMouseMove={() => setControlsVisible(true)} // Show controls when mouse moves over video
       >
         <VideoPlayer
@@ -128,8 +128,8 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
           setIsPlaying={setIsPlaying}
         />
         <div className="p-4 bg-gray-900 text-white rounded-lg shadow-md">
-          <h2 className="text-xl font-bold">{currentVideo.title}</h2>
-          <p className="text-sm text-gray-400">
+          <h2 className="text-xl font-bold ipadpro:text-lg">{currentVideo.title}</h2>
+          <p className="text-sm text-gray-400 ipadpro:text-xs">
             Duration: {currentVideo.duration}
           </p>
         </div>
@@ -142,8 +142,8 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
       </div>
 
       {/* Playlist Section */}
-      <div className="bg-gray-100 p-4 rounded-lg shadow-lg overflow-y-auto max-h-[60vh] sm:max-h-[50vh]">
-        <h3 className="text-xl font-semibold text-indigo-700 mb-4 text-center">
+      <div className="bg-gray-100 p-4 rounded-lg shadow-lg overflow-y-auto max-h-[60vh] sm:max-h-[50vh] ipadpro:max-h-[40vh]">
+        <h3 className="text-xl font-semibold text-indigo-700 mb-4 text-center ipadpro:text-lg">
           Videos in Playlist
         </h3>
         <div className="space-y-3">
@@ -162,7 +162,7 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
             >
               {/* Show image only on larger screens */}
               <div
-                className="hidden sm:block w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden"
+                className="hidden sm:block w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden ipadpro:hidden"
                 style={{
                   backgroundImage: `url(${safeImageUrl})`,
                   backgroundSize: "cover",
@@ -171,10 +171,10 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
               ></div>
               {/* Text for title and duration */}
               <div className="flex-1">
-                <h4 className="text-base sm:text-lg font-semibold overflow-hidden break-words">
+                <h4 className="text-base sm:text-lg font-semibold overflow-hidden break-words ipadpro:text-sm">
                   {video.title}
                 </h4>
-                <p className="text-xs sm:text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 ipadpro:text-[0.7rem]">
                   Duration: {video.duration}
                 </p>
               </div>
