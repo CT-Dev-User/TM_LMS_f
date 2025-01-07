@@ -10,13 +10,13 @@ import { CiMoneyCheck1 } from "react-icons/ci";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { MdOutlineDashboardCustomize } from "react-icons/md";
 import { SlCalender } from "react-icons/sl";
-import { NavLink , useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { formatTitle } from "../components/Utils"; // Import the title formatting utility
 
 function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
   const [isLargeScreen, setIsLargeScreen] = useState(false); // State to track if the screen is large
   const navigate = useNavigate(); // Initialize navigate
-
 
   const menuItems = [
     { icon: <AiOutlineHeart size={24} />, label: "Wishlist", link: "/" },
@@ -46,15 +46,16 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
   // Handle course navigation
   const handleCourseClick = (lecture) => {
-    const formattedTitle = lecture.title
-      .replace(/[^a-zA-Z0-9\s-]/g, "") // Remove non-alphanumeric characters
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .toLowerCase();
+    const formattedTitle = formatTitle(lecture.title); // Use utility for title formatting
 
-    navigate(`/playlist/${formattedTitle}`, { state: { lecture ,isSidebarOpen, isLargeScreen } });
+    navigate(`/playlist/${formattedTitle}`, {
+      state: { lecture, isSidebarOpen, isLargeScreen },
+    });
   };
+
   return (
     <>
       {/* Sidebar */}
@@ -89,15 +90,15 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
         )}
 
         {/* Sidebar Menu */}
-        <nav className=" flex-1 mt-4 overflow-y-auto max-h-screen">
+        <nav className="flex-1 mt-4 overflow-y-auto max-h-screen">
           <ul className="space-y-6">
             {/* My Courses Dropdown */}
             <li>
               <div
-                className=" flex items-center justify-between gap-4 px-4 py-2 cursor-pointer hover:bg-indigo-600 rounded-lg transition-all duration-300"
+                className="flex items-center justify-between gap-4 px-4 py-2 cursor-pointer hover:bg-indigo-600 rounded-lg transition-all duration-300"
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
               >
-                <div className="mb-1  flex items-center gap-4">
+                <div className="flex items-center gap-4">
                   <AiOutlineBook size={24} />
                   {isSidebarOpen && <span>My Courses</span>}
                 </div>
@@ -118,8 +119,8 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
               >
                 {lectures.map((lecture) => (
                   <li
-                    key={lectures.id}
-                    className="mr-2 cursor-pointer px-4 py-2 bg-indigo-800 hover:bg-indigo-600 rounded-lg transition-colors duration-300 shadow-md"
+                    key={lecture.id} // Fixed typo here: was lectures.id
+                    className="cursor-pointer px-4 py-2 bg-indigo-800 hover:bg-indigo-600 rounded-lg transition-colors duration-300 shadow-md"
                     onClick={() => handleCourseClick(lecture)}
                   >
                     {lecture.title}
