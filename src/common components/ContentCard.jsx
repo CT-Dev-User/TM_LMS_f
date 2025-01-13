@@ -1,54 +1,72 @@
+/* eslint-disable no-constant-binary-expression */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { formatTitle } from "../components/Utils"; // Import the title formatting utility
 
-function ContentCard({ lectures = [], onLectureClick, isSidebarOpen, isLargeScreen }) {
+function ContentCard({ course, onLectureClick, isSidebarOpen, isLargeScreen }) {
   const navigate = useNavigate();
 
-  const handleLectureClick = (lecture) => {
-    const formattedTitle = formatTitle(lecture.title);
-
-    navigate(`/playlist/${formattedTitle}`, { 
-      state: { lecture, isSidebarOpen, isLargeScreen } 
+  const handleLectureClick = (course) => {
+    if (!course._id) {
+      console.error("Course ID is missing", course);
+      return;
+    }
+  
+    // Navigate to the lectures endpoint using the course ID
+    navigate(`/lectures/${course._id}`, {
+      state: { course, isSidebarOpen, isLargeScreen },
     });
-
-    if (onLectureClick) onLectureClick(lecture); // Trigger callback if provided
   };
-
+  
   return (
     <div
       className={`grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 gap-6 ${
-        !isSidebarOpen ? "ml-16" : ""
+        !isSidebarOpen ? "" : ""
       }`}
     >
-      {lectures.length > 0 ? (
-        lectures.map((lecture) => {
-          const progress = lecture.progress || 0; // Default to 0 if progress is undefined
+      {course.length > 0 ? (
+        course.map((c) => {
+          const progress = c.progress || 0; // Default to 0 if progress is undefined
 
           return (
             <div
-              key={lecture.id}
-              onClick={() => handleLectureClick(lecture)}
+              key={c._id}
+              onClick={() => {
+                handleLectureClick(c);
+                if (onLectureClick) {
+                  onLectureClick(c);
+                }
+              }}
               className="cursor-pointer bg-white shadow-lg rounded-lg overflow-hidden transform transition-all w-full hover:scale-105 hover:shadow-xl duration-300"
               tabIndex="0"
-              onKeyDown={(e) => e.key === "Enter" && handleLectureClick(lecture)}
+              onKeyDown={(e) => e.key === "Enter" && handleLectureClick(c)}
               role="button"
-              aria-label={`Open lecture ${lecture.title}`}
+              aria-label={`Open lecture ${c.title}`}
             >
               <img
-                src={lecture.img || "https://via.placeholder.com/150"}
-                alt={lecture.title || "Lecture thumbnail"}
+                src={
+                  `http://localhost:3000/${c.image.replace(/\\/g, "/")}` ||
+                  "https://via.placeholder.com/150"
+                }
+                alt={c.title || "Lecture thumbnail"}
                 className="w-full h-48 object-cover rounded-t-lg"
               />
+
               <div className="p-4">
                 <h3 className="text-xl font-semibold text-indigo-700 mb-2 ipadpro:text-lg">
-                  {lecture.title || "Untitled Lecture"}
+                  {c.title || "Untitled Lecture"}
                 </h3>
                 <p className="text-gray-500 text-sm mb-4 ipadpro:text-xs">
-                  {lecture.description || "No description available."}
+                  {c.description || "No description available."}
                 </p>
+
+                {/* Add Price Display */}
+                {c.price && (
+                  <div className="text-lg text-gray-800 font-semibold">
+                    ${c.price}
+                  </div>
+                )}
 
                 <div className="relative pt-1">
                   <div className="flex mb-2 items-center justify-between">

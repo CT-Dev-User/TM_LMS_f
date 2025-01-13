@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
@@ -11,9 +12,8 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { MdOutlineDashboardCustomize } from "react-icons/md";
 import { SlCalender } from "react-icons/sl";
 import { NavLink, useNavigate } from "react-router-dom";
-import { formatTitle } from "../components/Utils"; // Import the title formatting utility
 
-function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
+function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, course }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
   const [isLargeScreen, setIsLargeScreen] = useState(false); // State to track if the screen is large
   const navigate = useNavigate(); // Initialize navigate
@@ -33,6 +33,10 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
     { icon: <SlCalender size={24} />, label: "Calendar", link: "/calendar" },
   ];
 
+  const handleCourseClick = (course) => {
+    // Navigate to the course details page using the course ID
+    navigate(`/lectures/${course._id}`, { state: { course, isSidebarOpen, isLargeScreen } });
+  };
   // Hook to track screen size
   useEffect(() => {
     const handleResize = () => {
@@ -47,14 +51,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
     };
   }, []);
 
-  // Handle course navigation
-  const handleCourseClick = (lecture) => {
-    const formattedTitle = formatTitle(lecture.title); // Use utility for title formatting
-
-    navigate(`/playlist/${formattedTitle}`, {
-      state: { lecture, isSidebarOpen, isLargeScreen },
-    });
-  };
+ 
 
   return (
     <>
@@ -117,13 +114,13 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen, user, lectures }) {
                   isDropdownOpen && isSidebarOpen ? "max-h-64" : "max-h-0"
                 } overflow-y-auto scrollbar-hidden`}
               >
-                {lectures.map((lecture) => (
+                {course.map((c) => (
                   <li
-                    key={lecture.id} // Fixed typo here: was lectures.id
+                    key={c.id} 
                     className="cursor-pointer px-4 py-2 bg-indigo-800 hover:bg-indigo-600 rounded-lg transition-colors duration-300 shadow-md"
-                    onClick={() => handleCourseClick(lecture)}
+                    onClick={() => handleCourseClick(c)}
                   >
-                    {lecture.title}
+                    {c.title}
                   </li>
                 ))}
               </ul>

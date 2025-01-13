@@ -1,87 +1,110 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
 import VideoPlayer from "./VideoPlayer";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import clsx from "clsx"; // Import clsx for conditional class management
+import { NavLink } from "react-router-dom";
+import clsx from "clsx"; // For conditional styling
 import VideoContent from "./VideoContent";
 
 const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
+  const { courseId } = useParams(); // Extract courseId from the route
+  const [lectures, setLectures] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const videoRef = useRef(null);
-  const location = useLocation();
-  const [activeSection, setActiveSection] = useState("summary");
-  const lecture = location.state?.lecture; // Access the lecture from state safely
-  const [controlsVisible, setControlsVisible] = useState(true); // New state for controls visibility
-  useEffect(() => {
-    if (lecture?.videos?.length > 0) {
-      setCurrentVideo(lecture.videos[0]);
-    }
-  }, [lecture]);
-
-  useEffect(() => {
-    if (currentVideo && videoRef.current) {
-      setIsPlaying(true);
-      // Hide controls after a delay if video starts playing
-      if (videoRef.current.currentTime > 0) {
-        setTimeout(() => {
-          setControlsVisible(false);
-        }, 3000); // Hide controls after 3 seconds
-      } else {
-        setControlsVisible(true); // Show controls if video is paused or just started
-      }
-    } else {
-      setIsPlaying(false);
-      setControlsVisible(true); // Always show controls when no video is playing
-    }
-  }, [currentVideo]);
-
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const navigate = useNavigate();
+  const [courseImage, setCourseImage] = useState(null); // New state for course image
+  const [activeSection, setActiveSection] = useState("summary");
+
+  // Fetch course image when courseId changes
+  useEffect(() => {
+    const fetchCourseDetails = async () => {
+      try {
+        const { data } = await axios.get(
+          `http://localhost:3000/api/course/${courseId}`
+        );
+        setCourseImage(data.course?.image); // Set course image from the response
+      } catch (err) {
+        setError("Failed to load course details.");
+      }
+    };
+
+    fetchCourseDetails();
+  }, [courseId]);
+
+  // Fetch lectures for the course when courseId changes
+  useEffect(() => {
+    const fetchLectures = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(
+          `http://localhost:3000/api/lectures/${courseId}`
+        );
+        setLectures(data.lectures || []);
+        if (data.lectures?.length > 0) {
+          setCurrentVideo(data.lectures[0]); // Set the first video as current
+        }
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load lectures.");
+        setLoading(false);
+      }
+    };
+
+    fetchLectures();
+  }, [courseId]);
+
   const handleBackToPlaylist = () => {
-    setCurrentVideo(null);
-    setIsPlaying(false);
-    navigate(-1);
+    navigate(-1); // Navigating to playlist details
   };
 
   const handleNextVideo = () => {
-    const currentIndex = lecture.videos.findIndex(
-      (video) => video.id === currentVideo.id
+    const currentIndex = lectures.findIndex(
+      (lecture) => lecture._id === currentVideo._id
     );
-    if (currentIndex < lecture.videos.length - 1) {
-      setCurrentVideo(lecture.videos[currentIndex + 1]);
+    if (currentIndex < lectures.length - 1) {
+      setCurrentVideo(lectures[currentIndex + 1]);
     }
   };
 
   const handlePreviousVideo = () => {
-    const currentIndex = lecture.videos.findIndex(
-      (video) => video.id === currentVideo.id
+    const currentIndex = lectures.findIndex(
+      (lecture) => lecture._id === currentVideo._id
     );
     if (currentIndex > 0) {
-      setCurrentVideo(lecture.videos[currentIndex - 1]);
+      setCurrentVideo(lectures[currentIndex - 1]);
     }
   };
 
-  // Show controls on mouse movement
   const handleMouseMove = () => {
     setControlsVisible(true);
-    clearTimeout(); // Clear any existing timeout for hiding controls
+    clearTimeout();
     if (isPlaying) {
       setTimeout(() => {
         setControlsVisible(false);
-      }, 3000); // Re-hide controls after 3 seconds if playing
+      }, 3000);
     }
   };
 
-  // Safe URLs for images and videos
-  const safeImageUrl = lecture?.img || "https://via.placeholder.com/150";
-  const safeVideoUrl =
-    currentVideo?.url || "https://path-to-placeholder-video.mp4";
+  const safeImageUrl = courseImage
+    ? `http://localhost:3000/${courseImage.replace(/\\/g, "/")}`
+    : null;
+  const safeVideoUrl = `http://localhost:3000/${
+    currentVideo?.video || "path-to-placeholder-video.mp4"
+  }`;
 
-  return currentVideo ? (
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
     <div
-      className={` rounded-lg  flex flex-col lg:flex-row gap-6 p-2 pt-4 pb-2 bg-gray-900 transition-all ${
+      className={`rounded-lg flex flex-col lg:flex-row gap-6 p-2 pt-4 pb-2 bg-gray-900 transition-all ${
         isSidebarOpen ? (isLargeScreen ? "lg:ml-64" : "") : "ml-0"
       } relative ipadpro:flex-col`}
       onMouseMove={handleMouseMove}
@@ -108,7 +131,9 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
             d="M19 12H5m7-7l-7 7 7 7"
           />
         </svg>
-        <span className="hidden lg:inline-block ipadpro:hidden">Back to Playlist</span>
+        <span className="hidden lg:inline-block ipadpro:hidden">
+          Back to Playlist
+        </span>
       </NavLink>
 
       {/* Video Player Section */}
@@ -128,34 +153,36 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
           setIsPlaying={setIsPlaying}
         />
         <div className="p-4 bg-gray-900 text-white rounded-lg shadow-md">
-          <h2 className="text-xl font-bold ipadpro:text-lg">{currentVideo.title}</h2>
+          <h2 className="text-xl font-bold ipadpro:text-lg">
+            {currentVideo.title}
+          </h2>
           <p className="text-sm text-gray-400 ipadpro:text-xs">
             Duration: {currentVideo.duration}
           </p>
+          {/* VideoContent Component */}
+          <VideoContent
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            lecture={currentVideo}
+          />
         </div>
-
-        <VideoContent
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
-          lecture={lecture}
-        />
       </div>
 
       {/* Playlist Section */}
-      <div className="bg-gray-100 p-4 rounded-lg shadow-lg overflow-y-auto max-h-[60vh] sm:max-h-[50vh] ipadpro:max-h-[40vh]">
+      <div className="bg-gray-100 p-4 rounded-lg shadow-lg overflow-y-auto max-h-[60vh] sm:max-h-[50vh] ipadpro:max-h-[40vh] lg:max-h-[70vh] lg:w-[32%]">
         <h3 className="text-xl font-semibold text-indigo-700 mb-4 text-center ipadpro:text-lg">
           Videos in Playlist
         </h3>
         <div className="space-y-3">
-          {lecture.videos.map((video) => (
+          {lectures.map((video) => (
             <div
-              key={video.id}
+              key={video._id}
               className={clsx(
                 "flex items-center gap-3 p-3 bg-white shadow-md rounded-lg transition cursor-pointer",
                 "hover:shadow-lg hover:bg-indigo-50",
                 {
                   "relative after:absolute after:inset-0 after:bg-black after:opacity-20 after:rounded-lg":
-                    video.id === currentVideo.id,
+                    video._id === currentVideo._id,
                 }
               )}
               onClick={() => setCurrentVideo(video)}
@@ -183,8 +210,6 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
         </div>
       </div>
     </div>
-  ) : (
-    <div>Loading...</div>
   );
 };
 

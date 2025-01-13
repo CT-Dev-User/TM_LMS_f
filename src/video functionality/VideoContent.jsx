@@ -16,7 +16,7 @@ export default function VideoContent({
 }) {
   return (
     <div className="mt-2 flex justify-center px-2 sm:px-4">
-      <div className="w-full max-w-4xl">
+      <div className="w-full ">
         {/* Navigation Buttons for larger screens */}
         <div className="hidden sm:flex justify-start mb-4 space-x-4 border-b-2 border-gray-200">
           {[
