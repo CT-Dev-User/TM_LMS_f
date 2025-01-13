@@ -1,15 +1,18 @@
-// eslint-disable-next-line no-unused-vars
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import { BrowserRouter } from "react-router-dom";
+import { StrictMode } from 'react'
+import './App.css'
+import { createRoot } from 'react-dom/client'
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+import App from './App.jsx'
+import { UserContextProvider } from './context/UserContext.jsx' 
 
-root.render(
-    <BrowserRouter>
-        <App/>
-    </BrowserRouter>
+export const server = 'http://localhost:3000'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+
+    <UserContextProvider >
+    <App />
+    </UserContextProvider>
+  
+  </StrictMode>,
 )
-
-// root.render(<App />);

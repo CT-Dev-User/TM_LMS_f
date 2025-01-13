@@ -1,0 +1,22 @@
+// eslint-disable-next-line no-unused-vars
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import './home.css'
+
+const Home = () => {
+    const navigate = useNavigate();
+  return (
+   
+    <div>
+        <div className="home">
+            <div className="home-content">
+                <h1> Welcome to our Platform</h1>
+                <p> Learn,Grow, Excel</p>
+                <button onClick={() =>  navigate("/courses") } className="common-btn">Get Started</button> 
+            </div>
+        </div>
+    </div>
+  )
+}
+
+export default Home

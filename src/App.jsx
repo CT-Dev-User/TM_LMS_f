@@ -1,54 +1,58 @@
 // eslint-disable-next-line no-unused-vars
-import React from "react";
-import Auth from "./components/Auth";
-import "./styles/Auth.css"; // Global styles
-import "../src/index.css"
-function App() {
-  return (
-    <div>
-      {/* <Navbar/> */}
-      <Auth />
-    </div>
+import React from 'react'
+import './index.css'
+import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Home from './pages/home/Home'
+import About from './pages/About/About';
+import Header from './components/header/Header'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/register'
+import Verify from './pages/auth/Verify'
+import Footer from './components/footer/Footer'
+import Account from './pages/Account/Account'
+import { UserData } from './context/UserContext';
+import Loading from './components/loading/loading';
+import DashboardPage from './pages/courses/DashboardPage'
+import PlaylistDetail from './components/VideoFunctionality/PlaylistDetail'
+
+const App = () => {
+  const { isAuth, user, loading } = UserData();
+
+  return (   
+    <>
+   
+   {
+    loading ?   (
+      <Loading /> 
+
+    ) : (
+    <BrowserRouter>
+      <Header isAuth={isAuth} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+
+        <Route path="/courses" element={<DashboardPage />} />  
+
+        <Route path="/:courseTitle/lectures/:courseId" element={<PlaylistDetail />} />
+        
+        <Route
+          path="/account"
+          element={isAuth ? <Account user={user} /> : <Login />}
+        />
+        <Route path="/login" element={isAuth ? <Home /> : <Login />} />
+        <Route path="/register" element={isAuth ? <Home /> : <Register />} />
+        <Route path="/verify" element={isAuth ? <Home /> : <Verify />} />
+
+        
+      </Routes>
+      <Footer />
+    </BrowserRouter> )
+}
+
+    </>
   );
 }
 
-export default App;
-// eslint-disable-next-line no-unused-vars
-// import React, { useState, useEffect } from "react";
-// import {
-//   BrowserRouter as Router,
-//   Routes,
-//   Route,
-//   Navigate,
-// } from "react-router-dom";
-// import Auth from "./components/Auth"; 
-// import "../src/index.css";
-
-// function App() {
-//   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-//   useEffect(() => {
-//     const authStatus = localStorage.getItem("isAuthenticated");
-//     if (authStatus === "true") {
-//       setIsAuthenticated(true);
-//     }
-//   }, []);
-
-//   return (
-//     <Router>
-//       <div className="flex">
-//         <main className="flex-1">
-//           <Routes>
-//             {/* Redirect to Home if authenticated, otherwise show Login */}
-//             <Route
-//               path="/"
-//               element={isAuthenticated ? <Navigate to="/home" /> : <Auth />}
-//             />
-//           </Routes>
-//         </main>
-//       </div>
-//     </Router>
-//   );
-// }
-
-// export default App;
+  export default App
