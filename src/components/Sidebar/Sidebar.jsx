@@ -10,66 +10,68 @@ import { CiMoneyCheck1 } from "react-icons/ci";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { MdOutlineDashboardCustomize } from "react-icons/md";
 import { SlCalender } from "react-icons/sl";
+import { BsPersonCircle, BsInfoCircle } from "react-icons/bs"; // Added icons for About and Accounts
 
 import { NavLink, useNavigate } from "react-router-dom";
 
 function Sidebar({ user, course }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar state, initially closed
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown
-  const [isLargeScreen, setIsLargeScreen] = useState(false); // State to track if the screen is large
-  const navigate = useNavigate(); // Initialize navigate
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const navigate = useNavigate();
 
+  // Updated menuItems with new entries
   const menuItems = [
     { icon: <AiOutlineHeart size={24} />, label: "Wishlist", link: "/" },
     {
       icon: <MdOutlineDashboardCustomize size={24} />,
       label: "Dashboard",
-      link: "/dashboard",
+      link: "/courses",
     },
     {
-      icon: <CiMoneyCheck1 size={24} />,
-      label: "Purchase History",
+      icon: <CiMoneyCheck1 size={24} />, 
+      label: "Purchase History", 
       link: "/purchase-history",
     },
     { icon: <SlCalender size={24} />, label: "Calendar", link: "/calendar" },
+    { icon: <BsInfoCircle size={24} />, label: "About", link: "/about" },
+    { icon: <BsPersonCircle size={24} />, label: "Account", link: "/account" },
   ];
 
   const handleCourseClick = (course) => {
-    // Navigate to the course details page using the course ID
-    navigate(`/lectures/${course._id}`, { state: { course, isSidebarOpen, isLargeScreen } });
+    if (!course._id || !course.title) {
+      console.error("Course ID or title is missing", course);
+      return;
+    }
+  
+    // Assuming course.title is URL-safe, if not, you might need to encode it
+    const safeTitle = encodeURIComponent(course.title.replace(/ /g, '-').toLowerCase());
+    
+    navigate(`/${safeTitle}/lectures/${course._id}`, {
+      state: { course, isSidebarOpen, isLargeScreen },
+    });
   };
 
-  // Hook to track screen size and update sidebar state
   useEffect(() => {
     const handleResize = () => {
-      const isLarge = window.innerWidth >= 1024; // Consider "lg" screen as 1024px and above
+      const isLarge = window.innerWidth >= 1024;
       setIsLargeScreen(isLarge);
-
-      // Automatically set sidebar state based on screen size
-      if (isLarge) {
-        setIsSidebarOpen(true); // Sidebar is open by default on large screens
-      } else {
-        setIsSidebarOpen(false); // Sidebar is closed by default on small screens
-      }
+      setIsSidebarOpen(isLarge); // Sidebar open by default on large screens
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <>
-      {/* Sidebar */}
       <aside
-        className={`relative top-0 h-full inset-y-0 left-0 transform ${
+        className={`absolute top-0 left-0 transform ${
           isSidebarOpen || isLargeScreen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-500 ease-in-out bg-[#8a5baf] text-white shadow-xl z-50 flex flex-col ${
           isSidebarOpen || isLargeScreen ? "w-64" : "w-16"
-        }`}
+        } h-full`}
       >
         {/* Close Icon for Small Screens */}
         {!isLargeScreen && isSidebarOpen && (
@@ -95,8 +97,8 @@ function Sidebar({ user, course }) {
         )}
 
         {/* Sidebar Menu */}
-        <nav className="flex-1 mt-4 overflow-y-auto max-h-screen">
-          <ul className="space-y-6">
+        <nav className="flex-1 overflow-y-auto max-h-full">
+          <ul className="space-y-6 px-2">
             {/* My Courses Dropdown */}
             <li>
               <div
@@ -112,9 +114,7 @@ function Sidebar({ user, course }) {
                     className={`transition-transform duration-300 ${
                       isDropdownOpen ? "rotate-90" : "rotate-0"
                     }`}
-                  >
-                    &gt;
-                  </span>
+                  ></span>
                 )}
               </div>
               <ul
@@ -154,8 +154,16 @@ function Sidebar({ user, course }) {
       </aside>
 
       {/* Collapsed Sidebar Icons */}
-      {(isSidebarOpen || !isLargeScreen) && (
-        <aside className=" top-4 mt-16 absolute  h-full left-0 bg-[#8a5baf] text-white w-16 shadow-xl z-40 flex-col items-center py-6 space-y-6">
+      {!isSidebarOpen && (
+        <aside
+          className={` pt-10 space-y-2 absolute top-0 left-0 transform ${
+            !isSidebarOpen || isLargeScreen
+              ? "translate-x-0"
+              : "-translate-x-full"
+          } transition-transform duration-500 ease-in-out bg-[#8a5baf] text-white shadow-xl z-50 flex flex-col ${
+            isSidebarOpen || isLargeScreen ? "w-64" : "w-16"
+          } h-full`}
+        >
           <div
             className="cursor-pointer flex justify-center items-center w-12 h-12 hover:bg-[#9f68c9] rounded-lg transition-colors duration-300"
             onClick={() => setIsSidebarOpen(true)}

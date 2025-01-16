@@ -53,10 +53,10 @@ const DashboardPage = () => {
   if (error) return <div className="h-screen flex items-center justify-center">Error: {error}</div>;
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex flex-grow">
+    <div className="w-full flex-grow flex flex-col">
+      <div className="flex flex-grow relative">
         {/* Sidebar */}
-        <div className={`w-[16%] md:w-[10%] lg:w-[2%] ${isSidebarOpen || isLargeScreen ? "block" : "hidden"}`}>
+        <div className={`custom-margin w-[16%] ml-8 md:w-[10%] lg:w-[1%] ipad:w-[17%] ipad-landscape:w-[17%] ipad-pro:w-[17%] ipad-pro-landscape:w-[17%] ${isSidebarOpen || isLargeScreen ? "block" : "hidden"}`}>
           <Sidebar
             isSidebarOpen={isSidebarOpen || isLargeScreen}
             setIsSidebarOpen={setIsSidebarOpen}
@@ -66,7 +66,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Main Content */}
-        <main className={`flex-grow p-4 ${isSidebarOpen || isLargeScreen ? "ml-[17%]" : ""}`}>
+        <main className={`flex-grow p-4 ${isSidebarOpen || isLargeScreen ? "lg:ml-[17%]  ipad:ml-[17%] ipad-landscape:ml-[17%] ipad-pro:ml-[17%] ipad-pro-landscape:ml-[20%]" : ""}`}>
           {/* Stats Section */}
           <div className="w-full mt-4 mb-10 flex flex-wrap gap-2 md:gap-2 lg:gap-4">
             <div className="w-full md:w-[48%] lg:w-[23%] px-3 shadow-md py-4 rounded-md border flex items-center gap-2 justify-between">
