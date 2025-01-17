@@ -15,6 +15,8 @@ import { UserData } from './context/UserContext';
 import Loading from './components/loading/loading';
 import DashboardPage from './pages/courses/DashboardPage'
 import PlaylistDetail from './components/VideoFunctionality/PlaylistDetail'
+import PurchaseHistory from './pages/Purchase History/page'
+import CalenderComponent from './pages/Calender/CalenderComponent'
 
 const App = () => {
   const { isAuth, user, loading } = UserData();
@@ -32,7 +34,8 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-
+        <Route path='calendar' element={<CalenderComponent/>} />
+        <Route path='/purchase-history' element={<PurchaseHistory/>} />
         <Route path="/courses" element={<DashboardPage />} />  
 
         <Route path="/:courseTitle/lectures/:courseId" element={<PlaylistDetail />} />
