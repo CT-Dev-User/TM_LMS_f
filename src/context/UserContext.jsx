@@ -142,24 +142,6 @@ async function registerUser(name , email,password,navigate){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     return (
         <UserContext.Provider value={{ user, setUser, isAuth, setIsAuth, btnLoading, setBtnLoading, loginUser,loading ,registerUser,fetchUser,verifyOtp}}>
             {children}

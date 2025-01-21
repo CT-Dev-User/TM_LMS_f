@@ -1,7 +1,8 @@
-// eslint-disable-next-line no-unused-vars
+/* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserData } from "../../context/UserContext";
+import ForgetPass from "../ForgetPass/forgetpass";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -19,12 +21,14 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
+  const toggleResetPassword = () => {
+    setShowResetPassword(!showResetPassword);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full p-8 space-y-8 bg-white rounded-lg shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-purple-700">
-          Login
-        </h2>
+        <h2 className="text-3xl font-bold text-center text-purple-700">Login</h2>
         <form className="mt-8 space-y-6" onSubmit={submitHandler}>
           <div>
             <label
@@ -66,7 +70,7 @@ const Login = () => {
             <button
               type="button"
               onClick={togglePasswordVisibility}
-              className="absolute inset-y-1 right-0  top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+              className="absolute inset-y-1 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
             >
               {showPassword ? (
                 <svg
@@ -120,7 +124,7 @@ const Login = () => {
           </div>
         </form>
         <p className="text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don’t have an account?{" "}
           <Link
             to="/register"
             className="font-medium text-purple-600 hover:text-purple-500"
@@ -128,7 +132,46 @@ const Login = () => {
             Register
           </Link>
         </p>
+        <p className="text-center text-sm text-gray-600">
+          <a
+            href="#"
+            onClick={toggleResetPassword}
+            className="font-medium text-purple-600 hover:text-purple-500"
+          >
+            Forgot Password?
+          </a>
+        </p>
       </div>
+
+      {/* Reset Password Modal */}
+      {showResetPassword && (
+        <div
+          className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center transition-opacity duration-300 ease-in-out"
+          style={{ opacity: showResetPassword ? "1" : "0", pointerEvents: showResetPassword ? "auto" : "none" }}
+        >
+          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md relative">
+            <button
+              onClick={toggleResetPassword}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 transition-all transform hover:scale-110"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <ForgetPass />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

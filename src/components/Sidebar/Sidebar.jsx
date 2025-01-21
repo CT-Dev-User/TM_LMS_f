@@ -26,7 +26,7 @@ function Sidebar({ user, course }) {
     {
       icon: <MdOutlineDashboardCustomize size={24} />,
       label: "Dashboard",
-      link: "/courses",
+      link: "/dashboard",
     },
     {
       icon: <CiMoneyCheck1 size={24} />, 
