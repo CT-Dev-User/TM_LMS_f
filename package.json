@@ -12,19 +12,17 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@schedule-x/calendar": "^2.14.2",
-    "@schedule-x/drag-and-drop": "^2.14.2",
-    "@schedule-x/event-modal": "^2.14.2",
-    "@schedule-x/react": "^2.13.2",
-    "@schedule-x/theme-default": "^2.14.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.0.6",
+    "mongoose": "^8.9.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.5.1",
     "react-icons": "^5.4.0",
+    "react-intersection-observer": "^9.15.1",
     "react-router-dom": "^7.1.1"
   },
   "devDependencies": {
@@ -38,7 +36,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "vite": "^6.0.5"
   }

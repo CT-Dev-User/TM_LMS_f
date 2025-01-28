@@ -1,34 +1,45 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { UserData } from "../../context/UserContext";
-import ForgetPass from "../ForgetPass/forgetpass";
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import image from "../../assets/login-security.gif"
+import { CourseData } from '../../context/CourseContext'
+import { UserData } from '../../context/UserContext'
+import ForgetPass from "../ForgetPass/forgetpass"
+import "./auth.css"
+
 
 const Login = () => {
-  const navigate = useNavigate();
-  const { btnLoading, loginUser } = UserData();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
+    const navigate = useNavigate();
+    const{btnLoading,loginUser,} = UserData();
+    const [email,setEmail] = useState("")
+    const [password,setPassword] = useState("")
+    const [showPassword, setShowPassword] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
+    const {fetchMyCourse} = CourseData();
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    await loginUser(email, password, navigate);
-  };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+    const submitHandler = async(e) => {
+        e.preventDefault();
+        await loginUser(email,password,navigate,fetchMyCourse);
+       
+    }
 
-  const toggleResetPassword = () => {
-    setShowResetPassword(!showResetPassword);
-  };
-
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+      };
+    
+      const toggleResetPassword = () => {
+        setShowResetPassword(!showResetPassword);
+      };
+    
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full p-8 space-y-8 bg-white rounded-lg shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-purple-700">Login</h2>
+    <div className="min-h-screen flex flex-col sm:flex-row items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="mb-8 sm:mb-0 sm:mr-8">
+        <img src={image} alt="img" className='w-72 sm:w-96 ' />
+      </div>
+      <div className="max-w-sm w-full p-8 bg-white rounded-lg shadow-lg">
+        <h2 className="text-3xl font-bold text-center text-purple-700">Log in!</h2>  <br/>
+        <p className="text-gray-400">Explore, learn, and grow with us. enjoy a seamless and enriching educational journey. lets begin!</p>
         <form className="mt-8 space-y-6" onSubmit={submitHandler}>
           <div>
             <label
@@ -122,7 +133,7 @@ const Login = () => {
               {btnLoading ? "Please Wait..." : "Login"}
             </button>
           </div>
-        </form>
+        </form><br/>
         <p className="text-center text-sm text-gray-600">
           Don’t have an account?{" "}
           <Link
@@ -132,6 +143,7 @@ const Login = () => {
             Register
           </Link>
         </p>
+        <br/>
         <p className="text-center text-sm text-gray-600">
           <a
             href="#"

@@ -1,7 +1,7 @@
-import {createContext, useContext, useEffect, useState} from "react";
-import { server } from "../main";
 import axios from "axios";
-import toast , { Toaster } from "react-hot-toast";
+import { createContext, useContext, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { server } from "../main";
 
 
 
@@ -14,7 +14,7 @@ export const UserContextProvider = ({children}) => {
     const [btnLoading, setBtnLoading] = useState(false);
     const [loading, setLoading] = useState(false);
 
-   async function loginUser(email,password,navigate){
+   async function loginUser(email,password,navigate,fetchMyCourse){
       setBtnLoading(true);
       try{
         const {data } =  await axios.post(`${server}/api/user/login`, {email,password});
@@ -25,6 +25,7 @@ export const UserContextProvider = ({children}) => {
         setIsAuth(true);
         setBtnLoading(false);
         navigate("/");
+        fetchMyCourse();
 
       }
       catch(error){
@@ -139,11 +140,28 @@ async function registerUser(name , email,password,navigate){
     }
   }
   
+  async function updateProfile(profileData, navigate) {
+    try {
+        const token = localStorage.getItem("token");
+        const { data } = await axios.put(
+            `${server}/api/user/update-profile`,
+            profileData,
+            {
+                headers: { token }
+            }
+        );
 
+        setUser(data.user);
+        toast.success("Profile updated successfully");
+        navigate("/");
+    } catch (error) {
+        toast.error(error.response?.data?.message || "Error updating profile");
+    }
+}
 
 
     return (
-        <UserContext.Provider value={{ user, setUser, isAuth, setIsAuth, btnLoading, setBtnLoading, loginUser,loading ,registerUser,fetchUser,verifyOtp}}>
+        <UserContext.Provider value={{ user,updateProfile, setUser, isAuth, setIsAuth, btnLoading, setBtnLoading, loginUser,loading ,registerUser,fetchUser,verifyOtp}}>
             {children}
             <Toaster />
         </UserContext.Provider>

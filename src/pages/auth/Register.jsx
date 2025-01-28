@@ -1,26 +1,44 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { UserData } from '../../context/userContext'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import image from "../../assets/Regs.png";
+import { UserData } from '../../context/UserContext.jsx';
 
 const Register = () => {
     const navigate = useNavigate();
     const { btnLoading, registerUser } = UserData();
-    const [name, setName] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState(""); // New state for error message
 
     const submitHandler = async (e) => {
         e.preventDefault();
-        await registerUser(name, email, password, navigate);
-    }
+        setError(""); // Clear any previous errors
+        try {
+            // Assuming registerUser returns a promise that resolves to the user's data
+            const user = await registerUser(name, email, password, navigate);
+            if (user) {
+                // Registration successful, redirect to user profile or dashboard
+                navigate('/dashboard');
+            }
+        } catch (err) {
+            // Handle any error from registerUser function
+            setError(err.message || "Registration failed. Please try again.");
+        }
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex flex-col sm:flex-row items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="px-24 mb-8 sm:mb-0 sm:mr-8">
+                <img src={image} alt="img" className='w-1000px sm:w-80' />
+            </div>
             <div className="max-w-md w-full p-8 space-y-8 bg-white rounded-lg shadow-lg">
                 <h2 className="text-3xl font-bold text-center text-purple-700">
                     Register
                 </h2>
+                <p className='text-gray-400'>Explore, learn, and grow with us. Enjoy a seamless and enriching educational journey. Let's begin!</p>
                 <form className="mt-8 space-y-6" onSubmit={submitHandler}>
+                    {error && <p className="text-red-500 text-xs">{error}</p>}
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                             Name
@@ -81,7 +99,7 @@ const Register = () => {
                 </p>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Register
+export default Register;

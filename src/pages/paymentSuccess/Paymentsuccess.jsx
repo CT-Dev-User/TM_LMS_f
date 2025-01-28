@@ -10,7 +10,7 @@ const Paymentsuccess = ({user}) => {
               <h2>Payment Successfull</h2>
               <p>Your course subscription has been activated</p>
               <p>Reference no - {params.id}</p>
-              <Link  to={`${user._id}/dashboard`} className='common-btn'> Go to Dashboard</Link>
+              <Link  to={`/${user._id}/dashboard`} className='common-btn'> Go to Dashboard</Link>
              </div>}
     </div>
   )

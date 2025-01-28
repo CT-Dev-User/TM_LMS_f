@@ -17,10 +17,10 @@ export default {
         },
       },
       screens: {
-        // Custom breakpoint for iPad Pro in portrait mode
+    
         'ipadpro': {'min': '1024px', 'max': '1366px'},
-        // Custom breakpoint for iPad Pro in landscape mode
-        'ipadpro-landscape': {'min': '1366px', 'max': '1024px'},
+        // Corrected Custom breakpoint for iPad Pro in landscape mode
+        'ipadpro-landscape': {'min': '1366px', 'max': '1668px'},
       }
     },
   },
