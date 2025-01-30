@@ -2,10 +2,15 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CourseCard from "../../components/courseCard/CourseCard";
+import CourseCard from "../../components/courseCard/CourseCardAll";
 import { CourseData } from "../../context/CourseContext";
 import { useInView } from 'react-intersection-observer';
-import img from '../../assets/img1 .webp'
+import img from '../../assets/img1 .webp';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import { Pagination , Autoplay } from 'swiper/modules';
+import { delay } from 'framer-motion';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -40,7 +45,8 @@ const Home = () => {
       const delay = setTimeout(() => {
         const newFilteredCourses = courses.filter(course => 
           course.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          course.description.toLowerCase().includes(searchTerm.toLowerCase())
+          course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (course.category && course.category.toLowerCase().includes(searchTerm.toLowerCase()))
         );
         setFilteredCourses(newFilteredCourses);
         setIsLoading(false);
@@ -49,6 +55,14 @@ const Home = () => {
       return () => clearTimeout(delay);
     }
   }, [courses, searchTerm]);
+
+  // Featured courses (example data)
+  const featuredCourses = courses ? [...courses].reverse().slice(0, 5) : [];
+
+  // Function to handle category click
+  const handleCategoryClick = (category) => {
+    setSearchTerm(category.toLowerCase());
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -97,6 +111,73 @@ const Home = () => {
         <div className="absolute inset-0 bg-purple-100 animate-pulse opacity-25"></div>
         <div className="guarantee absolute top-4 right-4 md:top-6 md:right-6 ipadpro:top-5 ipadpro:right-5 ipadpro-landscape:top-4 ipadpro-landscape:right-4 z-20"></div>
       </div>
+
+      {/* Featured Courses Section */}
+      <div className="featured-courses px-4 sm:px-6 lg:px-[10%] mt-8">
+        <h2 className="text-center text-2xl font-semibold text-gray-700 mb-6 md:text-2xl lg:text-3xl ipadpro:text-2xl ipadpro-landscape:text-xl">
+          Featured Courses
+        </h2>
+        <Swiper
+  slidesPerView={1}
+  spaceBetween={10}
+  pagination={{
+    clickable: true,
+  }}
+  breakpoints={{
+    640: {
+      slidesPerView: 2,
+      spaceBetween: 20,
+    },
+    1024: {
+      slidesPerView: 3,
+      spaceBetween: 30,
+    },
+  }}
+  modules={[Pagination, Autoplay]}
+  className="mySwiper"
+  autoplay={{
+    delay: 4000,
+    disableOnInteraction: false, 
+  }}
+  onSlideChange={() => {
+  }}
+  onTouchStart={(swiper) => {
+    swiper.autoplay.stop();
+  }}
+  onTouchEnd={(swiper) => {
+    setTimeout(() => {
+      swiper.autoplay.start();
+    }, 8000); 
+  }}
+>
+  {featuredCourses.map((course) => (
+    <SwiperSlide key={course._id}>
+      <CourseCard course={course} className={' mb-10'} />
+    </SwiperSlide>
+  ))}
+</Swiper>
+      </div>
+
+      {/* Categories Section */}
+      <div className="categories-section px-4 sm:px-6 lg:px-[10%] mt-8">
+        <h2 className="text-center text-2xl font-semibold text-gray-700 mb-6 md:text-2xl lg:text-3xl ipadpro:text-2xl ipadpro-landscape:text-xl">
+          Browse by Category
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {['Programming', 'Design', 'Business', 'Marketing', 'Data Science'].map((category, index) => (
+            <div 
+              key={index} 
+              className="category-item bg-white p-4 rounded-lg shadow-md text-center cursor-pointer hover:shadow-lg transition-shadow duration-300"
+              onClick={() => handleCategoryClick(category)}
+            >
+              <span className="text-2xl">📚</span>
+              <p className="text-gray-800 font-semibold mt-2">{category}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Courses Section */}
       <div 
         ref={coursesSectionRef} 
         className={`courses-section px-4 sm:px-6 lg:px-[10%] mt-8 transition-all duration-1000 ease-in-out ${coursesSectionInView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
@@ -115,7 +196,7 @@ const Home = () => {
                 <CourseCard key={course._id} course={course} className={`mb-10 transition-all duration-1000 ease-in-out rounded-3xl ${coursesSectionInView ? 'translate-y-0 opacity-100' : `translate-y-10 opacity-0 delay-${index * 100}`}`} />
               ))
             ) : (
-              <p className="text-gray-500 text-center col-span-full">
+              <p className="text-gray-500 text-center col-span-full mb-10">
                 No Courses match your search
               </p>
             )

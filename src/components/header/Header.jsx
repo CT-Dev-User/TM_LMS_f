@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DropdownMenu from '../../pages/Dropdownmenu/dropdown.jsx';
+import { UserData } from "../../context/UserContext";
 
-const Header = ({ isAuth, user, handleLogout }) => {
+const Header = ({ isAuth, handleLogout }) => {
+  const { user } = UserData(); // Fetch user data from context
+
   return (
     <header className="flex justify-between items-center px-5 py-4 bg-white shadow-sm">
       {/* Logo Section */}
@@ -26,9 +29,16 @@ const Header = ({ isAuth, user, handleLogout }) => {
             </Link>
           ) : (
             <>
-              <Link to="/my-courses" className="text-gray-800 hover:text-[#8a4baf] transition-colors duration-300">
-                My Courses
-              </Link>
+              {user && user.role !== "admin" && (
+                <Link to="/my-courses" className="text-gray-800 hover:text-[#8a4baf] transition-colors duration-300">
+                  My Courses
+                </Link>
+              )}
+              {user && user.role === "admin" && (
+                <Link to="/admin/dashboard" className="text-gray-800 hover:text-[#8a4baf] transition-colors duration-300">
+                  Admin Dashboard
+                </Link>
+              )}
               <DropdownMenu user={user} setIsAuth={handleLogout} />
             </>
           )}

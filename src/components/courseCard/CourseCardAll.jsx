@@ -15,7 +15,7 @@ const CourseCard = ({ course, className }) => {
 
   const handleStudyClick = () => {
     if (isAuth && user.subscription.includes(course._id)) {
-      navigate(`/course/study/${course._id}`);
+      navigate(`/my-courses`);
     } else {
       navigate(`/course/${course._id}`);
     }
@@ -24,22 +24,6 @@ const CourseCard = ({ course, className }) => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       navigate(`/course/${course._id}`);
-    }
-  };
-
-  const deleteHandler = async (id) => {
-    if (confirm("Are you sure you want to delete this course?")) {
-      try {
-        const { data } = await axios.delete(`${server}/api/course/${id}`, {
-          headers: {
-            token: localStorage.getItem("token"),
-          },
-        });
-        toast.success(data.message);
-        fetchCourses(); // Refresh the list of courses
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Error deleting course");
-      }
     }
   };
 
@@ -121,16 +105,7 @@ const CourseCard = ({ course, className }) => {
               Login to Enroll
             </button>
           )}
-
-          {/* Admin Delete Button */}
-          {user && user.role === "admin" && (
-            <button
-              onClick={() => deleteHandler(course._id)}
-              className="w-full bg-red-500 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:bg-red-600 transform hover:scale-105"
-            >
-              Delete Course
-            </button>
-          )}
+       
         </div>
       </div>
     </div>

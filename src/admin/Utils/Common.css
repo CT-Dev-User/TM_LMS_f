@@ -2,7 +2,7 @@
     width: 200px;
     height: 100%;
     left: 0;
-    color: white;
+    color: black;
     border-right: 1px solid gray;
 
     @media (max-width: 768px) {

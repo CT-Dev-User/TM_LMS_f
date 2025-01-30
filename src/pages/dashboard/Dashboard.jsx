@@ -47,7 +47,7 @@ const DashboardPage = () => {
     );
 
   return (
-    <div className="w-full flex-grow flex flex-col h-screen">
+    <div className="w-full flex-grow flex flex-col lg:h-screen md:h-screen sm:h-auto">
       <div className="flex flex-grow relative">
         {/* Sidebar */}
         <div
@@ -107,7 +107,9 @@ const DashboardPage = () => {
           <div className="animate-fadeIn">
             {myCourses.length > 0 ? (
               <>
-                <h2 className="text-2xl font-semibold pb-5">Continue Learning</h2>
+                <h2 className="text-2xl font-semibold pb-5">
+                  Continue Learning
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 ipadpro-landscape:grid-cols-3 gap-4 mt-4">
                   {myCourses.map((course) => (
                     <ContentCard key={course._id} course={course} />
@@ -115,7 +117,9 @@ const DashboardPage = () => {
                 </div>
               </>
             ) : (
-              <p className="text-2xl font-semibold pb-5">No Courses Enrolled Yet</p>
+              <p className="text-2xl font-semibold pb-5">
+                No Courses Enrolled Yet
+              </p>
             )}
           </div>
         </main>

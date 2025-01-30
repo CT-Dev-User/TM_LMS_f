@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { UserData } from '../../context/userContext';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import image from '../../assets/Animation-verify.gif';
+import { UserData } from '../../context/UserContext';
 
 const Verify = () => {
   const [otp, setOtp] = useState("");
-  const {verifyOtp} = UserData()
+  const { verifyOtp } = UserData();
   const navigate = useNavigate();
 
   const submitHandler = async (e) => {
@@ -13,8 +14,14 @@ const Verify = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full p-8 space-y-8 bg-white rounded-lg shadow-lg">
+    <div className="min-h-screen flex flex-col md:flex-row space-x-24 items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Image Section */}
+      <div className="mb-8 md:mb-0 md:mr-8">
+        <img src={image} alt="img" className='w-72 sm:w-96' />
+      </div>
+
+      {/* Form Section */}
+      <div className="max-w-md w-full p-8  space-y-8 bg-white rounded-lg shadow-lg">
         <h2 className="text-3xl font-bold text-center text-purple-700">
           Verify Account
         </h2>
@@ -50,4 +57,4 @@ const Verify = () => {
   )
 }
 
-export default Verify
+export default Verify;

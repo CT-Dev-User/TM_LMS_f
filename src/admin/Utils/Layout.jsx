@@ -1,15 +1,13 @@
-import React from 'react'
-import Sidebar from './Sidebar'
-import "./Common.css"
+import React from "react";
+import Sidebar from "./Sidebar";
 
-const Layout = ({children}) => {
+const Layout = ({ children }) => {
   return (
-    <div className="dashboard-admin">
-
-        <Sidebar />
-        <div className="content">{children}</div>
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 p-6">{children}</div>
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

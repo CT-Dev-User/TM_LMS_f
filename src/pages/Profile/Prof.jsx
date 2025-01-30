@@ -204,6 +204,7 @@ const ProfileSettings = ({ user }) => {
     toast.success("Logout Successfully");
     navigate("/");
   };
+
   if (!myCourses) {
     return (
       <div className="h-screen flex items-center justify-center animate-pulse">
@@ -255,9 +256,13 @@ const ProfileSettings = ({ user }) => {
                       src={profileImage} 
                       alt="Profile" 
                       className="rounded-full w-full h-full cursor-pointer"
+                      onClick={handleImageClick} // Here's where handleImageClick is used
                     />
                   ) : (
-                    <div className="profile-initials rounded-full w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl cursor-pointer">
+                    <div 
+                      className="profile-initials rounded-full w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl cursor-pointer"
+                      onClick={handleImageClick} // Here's where handleImageClick is used
+                    >
                       {getInitials(formData.firstName, formData.lastName)}
                     </div>
                   )}
@@ -306,7 +311,7 @@ const ProfileSettings = ({ user }) => {
                     type="email"
                     value={formData.email}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800 focus:outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800  focus:outline-none"
                   />
                 </div>
                 <div className="button-container flex justify-center gap-5">
