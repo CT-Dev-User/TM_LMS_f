@@ -7,10 +7,28 @@ const Verify = () => {
   const [otp, setOtp] = useState("");
   const { verifyOtp } = UserData();
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    await verifyOtp(Number(otp), navigate);
+    setErrorMessage(""); // Clear any previous error message
+
+    try {
+      const result = await verifyOtp(otp, navigate); // Removed Number(), since otp can be string or number
+      if (result && result.message === "User registered successfully") {
+        toast.success("Account verified and user registered!"); // Assuming you have toast imported
+        navigate('/login');
+      } else {
+        setErrorMessage("Verification failed. Please check your OTP.");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("An error occurred during verification. Please try again.");
+      }
+    }
   }
 
   return (
@@ -21,17 +39,18 @@ const Verify = () => {
       </div>
 
       {/* Form Section */}
-      <div className="max-w-md w-full p-8  space-y-8 bg-white rounded-lg shadow-lg">
+      <div className="max-w-md w-full p-8 space-y-8 bg-white rounded-lg shadow-lg">
         <h2 className="text-3xl font-bold text-center text-purple-700">
           Verify Account
         </h2>
+        {errorMessage && <p className="text-red-500 text-sm text-center">{errorMessage}</p>}
         <form className="mt-8 space-y-6" onSubmit={submitHandler}>
           <div>
             <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
               Enter OTP
             </label>
             <input 
-              type="number"
+              type="text" // Changed to text since OTP can be prefixed with zeros
               id="otp"
               value={otp}
               onChange={e => setOtp(e.target.value)}

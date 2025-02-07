@@ -1,34 +1,18 @@
+import React, { useEffect, useState } from "react";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import { CourseData } from "../../context/CourseContext";
+import { UserData } from "../../context/UserContext";
+import ContentCard from "../dashboard/ContentCard.jsx";
 
-import React, { useEffect, useState } from 'react';
-import { MdDashboard } from "react-icons/md";
-import { useNavigate } from 'react-router-dom';
-import { CourseData } from '../../context/CourseContext';
-import './PurcHis.css';
-import Sidebar from "../../components/Sidebar/Sidebar"; // Adjust the import path as necessary
-import { UserData } from "../../context/UserContext"; // Assuming you need user data
-
-const PurchaseHistory = () => {
-  const { user } = UserData();
-  const { purchaseHistory, fetchPurchaseHistory, mycourse: myCourses } = CourseData();
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [timeFilter, setTimeFilter] = useState('all');
+const Purchasehistory = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const navigate = useNavigate();
+  const { mycourse: myCourses, fetchMyCourse } = CourseData();
+  const [error, setError] = useState(null);
+
+  const { user } = UserData();
 
   useEffect(() => {
-    const loadPurchaseHistory = async () => {
-      try {
-        await fetchPurchaseHistory();
-      } catch (error) {
-        console.log("Error loading purchase history:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPurchaseHistory();
-
     const handleResize = () => {
       setIsLargeScreen(window.innerWidth >= 1024);
     };
@@ -37,82 +21,30 @@ const PurchaseHistory = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const getFilteredPurchases = () => {
-    let filtered = Array.isArray(purchaseHistory) ? [...purchaseHistory] : [];
-    
-    if (searchTerm) {
-      filtered = filtered.filter(purchase => 
-        purchase.course.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  useEffect(() => {
+    if (!myCourses || myCourses.length === 0) {
+      fetchMyCourse().catch(() => setError("Failed to load your courses"));
     }
-    
-    const now = new Date();
-    
-    switch(timeFilter) {
-      case 'month':
-        { const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-        filtered = filtered.filter(purchase => {
-          const purchaseDate = new Date(purchase.date);
-          return purchaseDate >= lastMonth && purchaseDate <= lastDayOfMonth;
-        });
-        break; }
-        
-      case 'year':
-        { const lastYear = new Date(now);
-        lastYear.setFullYear(lastYear.getFullYear() - 1);
-        filtered = filtered.filter(purchase => {
-          const purchaseDate = new Date(purchase.date);
-          return purchaseDate >= lastYear;
-        });
-        break; }
-        
-      default:
-        break;
-    }
-    
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-    return filtered;
-  };
+  }, [fetchMyCourse, myCourses]);
 
-  const handleExport = () => {
-    const filteredData = getFilteredPurchases();
-    const csvContent = [
-      ['Course', 'Date', 'Amount', 'Status', 'Invoice'],
-      ...filteredData.map(purchase => [
-        purchase.course,
-        new Date(purchase.date).toLocaleDateString(),
-        purchase.amount,
-        purchase.status,
-        purchase.invoice
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'purchase-history.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-  if (loading) {
+  if (!myCourses)
     return (
-      <div className="w-full flex-grow flex flex-col">
-        <div className="flex flex-grow relative">
-          <div className="h-screen flex items-center justify-center animate-pulse">
-            Loading...
-          </div>
-        </div>
+      <div className=" h-screen flex items-center justify-center animate-pulse">
+        Loading...
       </div>
     );
-  }
 
-  const filteredPurchases = getFilteredPurchases();
+  if (error)
+    return (
+      <div className="h-screen flex items-center justify-center animate-pulse">
+        Error: {error}
+      </div>
+    );
 
   return (
-    <div className="w-full flex-grow flex flex-col">
+    <div className="w-full flex flex-col min-h-screen">
       <div className="flex flex-grow relative">
+        {/* Sidebar */}
         <div
           className={`custom-margin w-[16%] ml-8 md:w-[10%] lg:w-[1%] ipad:w-[17%] ipad-landscape:w-[17%] ipad-pro:w-[17%] ipad-pro-landscape:w-[17%] ${
             isSidebarOpen || isLargeScreen ? "block" : "hidden"
@@ -126,6 +58,7 @@ const PurchaseHistory = () => {
           />
         </div>
 
+        {/* Main Content */}
         <main
           className={`flex-grow p-4 animate-fadeIn ${
             isSidebarOpen || isLargeScreen
@@ -133,84 +66,20 @@ const PurchaseHistory = () => {
               : ""
           }`}
         >
-          <div className="purchase-container">
-            <div className="purchase-card">
-              <h1 className="purchase-title">Purchase History</h1>
-              <p className="purchase-subtitle">View all your course purchases and transactions</p>
-
-              <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search purchases..."
-                  className="search-input"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <div className="filter-container">
-                  <select 
-                    className="filter-select"
-                    value={timeFilter}
-                    onChange={(e) => setTimeFilter(e.target.value)}
-                  >
-                    <option value="all">All Time</option>
-                    <option value="month">Last Month</option>
-                    <option value="year">Last Year</option>
-                  </select>
-                  <button className="export-button" onClick={handleExport}>
-                    Export
-                  </button>
+          {/* Courses Section */}
+          <div className="animate-fadeIn">
+            {myCourses.length > 0 ? (
+              <>
+                <h2 className="text-2xl font-semibold pb-5">Purchase History</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 ipadpro-landscape:grid-cols-3 gap-4 mt-4">
+                  {myCourses.map((course) => (
+                    <ContentCard key={course._id} course={course} />
+                  ))}
                 </div>
-              </div>
-
-              <div className="table-container">
-                {filteredPurchases.length === 0 ? (
-                  <div className="no-purchases">
-                    <p>No subscription history found for the selected period</p>
-                    <button 
-                      onClick={() => navigate('/courses')} 
-                      className="browse-courses-btn"
-                    >
-                      <MdDashboard />
-                      Get Subscription
-                    </button>
-                  </div>
-                ) : (
-                  <table className="purchase-table">
-                    <thead className="table-header">
-                      <tr>
-                        <th>Course</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Invoice</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredPurchases.map((purchase, index) => (
-                        <tr key={index} className="table-row">
-                          <td className="course-cell">
-                            <img
-                              src={purchase.image}
-                              alt={purchase.course}
-                              className="course-image"
-                            />
-                            <span>{purchase.course}</span>
-                          </td>
-                          <td>{new Date(purchase.date).toLocaleDateString()}</td>
-                          <td>{purchase.amount}</td>
-                          <td>
-                            <span className={`status-badge ${purchase.status === 'Completed' ? 'status-completed' : 'status-pending'}`}>
-                              {purchase.status}
-                            </span>
-                          </td>
-                          <td className="invoice-link">{purchase.invoice}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
+              </>
+            ) : (
+              <p className="text-2xl font-semibold pb-5">No Courses Enrolled Yet</p>
+            )}
           </div>
         </main>
       </div>
@@ -218,4 +87,17 @@ const PurchaseHistory = () => {
   );
 };
 
-export default PurchaseHistory;
+// Reusable Stats Card Component
+const StatCard = ({ title, count, icon, bgColor, textColor }) => (
+  <div className="w-full sm:w-[48%] md:w-[48%] lg:w-[23%] xl:w-[23%] px-3 shadow-md py-4 rounded-md border flex items-center gap-2 justify-between animate-fadeIn">
+    <div className="flex flex-col gap-2">
+      <h3 className="text-zinc-700">{title}</h3>
+      <p className="text-3xl">{count}</p>
+    </div>
+    <div className={`${bgColor} ${textColor} font-bold text-xl p-4 rounded-md`}>
+      {icon}
+    </div>
+  </div>
+);
+
+export default Purchasehistory;

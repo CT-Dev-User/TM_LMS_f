@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import toast from "react-hot-toast";
 import { FaTrash } from 'react-icons/fa';
 import { IoMdLogOut } from "react-icons/io";
 import { useNavigate } from 'react-router-dom';
-import { UserData } from "../../context/UserContext";
 import Sidebar from "../../components/Sidebar/Sidebar";
-import { server } from '../../main';
 import { CourseData } from "../../context/CourseContext";
+import { UserData } from "../../context/UserContext";
+import { server } from '../../main';
 
 const ProfileSettings = ({ user }) => {
   const { setIsAuth, setUser } = UserData();
@@ -182,7 +183,7 @@ const ProfileSettings = ({ user }) => {
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
         toast.success("Profile updated successfully");
-        navigate("/account");
+        navigate("/profile");
       }
     } catch (error) {
       toast.error("Failed to update profile");
@@ -225,9 +226,7 @@ const ProfileSettings = ({ user }) => {
     <div className="w-full flex-grow flex flex-col">
       <div className="flex flex-grow relative">
         <div
-          className={`custom-margin w-[16%] ml-8 md:w-[10%] lg:w-[1%] ipad:w-[17%] ipad-landscape:w-[17%] ipad-pro:w-[17%] ipad-pro-landscape:w-[17%] ${
-            isSidebarOpen || isLargeScreen ? "block" : "hidden"
-          }`}
+          className={`custom-margin w-full sm:w-[16%] md:w-[10%] lg:w-[1%] xl:w-[1%] ${isSidebarOpen || isLargeScreen ? "block" : "hidden"}`}
         >
           <Sidebar
             isSidebarOpen={isSidebarOpen || isLargeScreen}
@@ -237,11 +236,7 @@ const ProfileSettings = ({ user }) => {
           />
         </div>
         <main
-          className={`flex-grow p-4 animate-fadeIn ${
-            isSidebarOpen || isLargeScreen
-              ? "lg:ml-[17%] ipad:ml-[17%] ipad-landscape:ml-[17%] ipad-pro:ml-[17%] ipad-pro-landscape:ml-[20%]"
-              : ""
-          }`}
+          className={`flex-grow p-4 animate-fadeIn ${isSidebarOpen || isLargeScreen ? "lg:ml-[17%]" : ""}`}
         >
           <div className="container flex justify-center items-center min-h-screen bg-gray-100 p-4">
             <div className="card bg-white shadow-md rounded-lg p-8 max-w-lg w-full">
@@ -249,19 +244,19 @@ const ProfileSettings = ({ user }) => {
                 <h1 className="text-2xl font-bold mb-2">Complete Your Profile</h1>
                 <p className="text-gray-500 mb-4">Tell us more about yourself</p>
               </div>
-              <div className="profile-picture-container flex items-center mb-8">
-                <div className="profile-picture relative w-24 h-24 mr-6">
+              <div className="profile-picture-container flex flex-col items-center mb-8">
+                <div className="profile-picture relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
                   {profileImage ? (
                     <img 
                       src={profileImage} 
                       alt="Profile" 
-                      className="rounded-full w-full h-full cursor-pointer"
-                      onClick={handleImageClick} // Here's where handleImageClick is used
+                      className="rounded-full w-full h-full object-cover cursor-pointer"
+                      onClick={handleImageClick}
                     />
                   ) : (
                     <div 
-                      className="profile-initials rounded-full w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl cursor-pointer"
-                      onClick={handleImageClick} // Here's where handleImageClick is used
+                      className="profile-initials rounded-full w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl md:text-3xl lg:text-4xl cursor-pointer"
+                      onClick={handleImageClick}
                     >
                       {getInitials(formData.firstName, formData.lastName)}
                     </div>
@@ -275,7 +270,7 @@ const ProfileSettings = ({ user }) => {
                     </button>
                   )}
                 </div>
-                <span className="Profile-picture-text text-left text-sm text-gray-600">
+                <span className="Profile-picture-text text-center text-sm text-gray-600 mt-4">
                   Profile Photo
                   <span className="block text-xs text-gray-400">Click to update your profile picture</span>
                 </span>
@@ -314,16 +309,18 @@ const ProfileSettings = ({ user }) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800  focus:outline-none"
                   />
                 </div>
-                <div className="button-container flex justify-center gap-5">
-                  <button type="submit" className="button bg-indigo-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer transition-colors duration-300 hover:bg-indigo-700">
+                <div className="button-container flex flex-col sm:flex-row justify-center gap-4">
+                  <button type="submit" className="button bg-indigo-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer transition-colors duration-300 hover:bg-indigo-700 w-full sm:w-auto">
                     Save Changes
                   </button>
+                  
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="button bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm cursor-pointer transition-colors duration-300 hover:bg-gray-300"
+                    className="button bg-red-500 text-white px-4 py-2 rounded-md text-sm cursor-pointer transition-colors duration-300 hover:bg-red-600 flex items-center justify-center w-full sm:w-auto"
                   >
-                    <IoMdLogOut /> Logout
+                    <IoMdLogOut className="mr-2" />
+                    Logout
                   </button>
                 </div>
               </form>

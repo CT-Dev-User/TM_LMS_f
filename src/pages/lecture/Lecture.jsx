@@ -1,243 +1,402 @@
-import React, { useEffect, useState } from 'react';
-import "./Lecture.css";
-import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { server } from "../../main";
-import Loading from '../../components/loading/loading';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate, useParams } from 'react-router-dom';
+import Loading from '../../components/loading/Loading.jsx';
+import { server } from "../../main";
 
 const Lecture = ({ user }) => {
-  const [lectures, setLectures] = useState([]);
-  const [lecture, setLecture] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [lecLoading, setLecLoading] = useState(false);
-  const [show, setShow] = useState(false);
-  const params = useParams();
-  const navigate = useNavigate();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [video, setVideo] = useState("");
-  const [videoPrev, setVideoPrev] = useState("");
-  const [btnLoading, setBtnLoading] = useState(false);
+    const [lectures, setLectures] = useState([]);
+    const [lecture, setLecture] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [lecLoading, setLecLoading] = useState(false);
+    const [showAddLectureForm, setShowAddLectureForm] = useState(false);
+    const [meetingFormVisible, setMeetingFormVisible] = useState(false);
+    const [meetingLink, setMeetingLink] = useState("");
+    const [meetingDate, setMeetingDate] = useState("");
+    const [meetingTime, setMeetingTime] = useState("");
+    const [platform, setPlatform] = useState("");
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [video, setVideo] = useState(null);
+    const [videoPreview, setVideoPreview] = useState("");
+    const [btnLoading, setBtnLoading] = useState(false);
+    const [courseMeetings, setCourseMeetings] = useState([]);
 
-  if (user && user.role !== "admin" && !user.subscription.includes(params.id)) {
-    return navigate("/");
-  }
+    const params = useParams();
+    const navigate = useNavigate();
 
-  async function fetchLectures() {
-    try {
-      const { data } = await axios.get(`${server}/api/lectures/${params.id}`, {
-        headers: {
-          token: localStorage.getItem("token"),
-        },
-      });
-      setLectures(data.lectures);
-      setLoading(false);
-    } catch (error) {
-      console.log("error");
-      setLecLoading(false);
-    }
-  }
-
-  async function fetchLecture(id) {
-    setLecLoading(true);
-    try {
-      const { data } = await axios.get(`${server}/api/lecture/${id}`, {
-        headers: {
-          token: localStorage.getItem("token"),
+    useEffect(() => {
+        if (user && user.role !== "admin" && !user.subscription.includes(params.id)) {
+            navigate("/");
         }
-      });
-      setLecture(data.lecture);
-      setLecLoading(false);
-    } catch (error) {
-      console.log(error);
-      setLecLoading(false);
-    }
-  }
+    }, [user, params.id, navigate]);
 
-  const changeVideoHandler = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = () => {
-      setVideoPrev(reader.result);
-      setVideo(file);
+    const fetchLectures = async () => {
+        try {
+            const { data } = await axios.get(`${server}/api/lectures/${params.id}`, {
+                headers: { token: localStorage.getItem("token") },
+            });
+            setLectures(data.lectures);
+            await fetchCourseMeetings();
+            setLoading(false);
+        } catch (error) {
+            console.error("Failed to fetch lectures:", error);
+            toast.error("Error fetching lectures.");
+            setLoading(false);
+        }
     };
-  }
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    const myForm = new FormData();
-    myForm.append("title", title);
-    myForm.append("description", description);
-    myForm.append("file", video);
-    try {
-      const { data } = await axios.post(`${server}/api/course/${params.id}`, myForm, {
-        headers: {
-          token: localStorage.getItem("token"),
-        },
-      });
-      toast.success(data.message);
-      setBtnLoading(false);
-      setShow(false);
-      fetchLectures();
-      setTitle("");
-      setDescription("");
-      setVideo("");
-      setVideoPrev("");
-    } catch (error) {
-      toast.error(error.response.data.message);
-      setBtnLoading(false);
-    }
-  }
+    const fetchCourseMeetings = async () => {
+        try {
+            const { data } = await axios.get(`${server}/api/course/${params.id}/meetings`, {
+                headers: { token: localStorage.getItem("token") },
+            });
+            setCourseMeetings(data.meetings);
+        } catch (error) {
+            console.error("Failed to fetch meetings:", error);
+            toast.error("Error fetching meetings.");
+        }
+    };
 
-  const deleteHandler = async (id) => {
-    if (confirm("Are you sure you want to delete this lecture?")) {
-      try {
-        const { data } = await axios.delete(`${server}/api/lecture/${id}`, {
-          headers: {
-            token: localStorage.getItem("token"),
-          },
-        });
-        toast.success(data.message);
+    const fetchLecture = async (id) => {
+        setLecLoading(true);
+        try {
+            const { data } = await axios.get(`${server}/api/lecture/${id}`, {
+                headers: { token: localStorage.getItem("token") },
+            });
+            setLecture(data.lecture);
+        } catch (error) {
+            console.error("Failed to fetch lecture:", error);
+            toast.error("Error fetching lecture.");
+        } finally {
+            setLecLoading(false);
+        }
+    };
+
+    const handleVideoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setVideoPreview(reader.result);
+                setVideo(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSubmitLecture = async (e) => {
+        e.preventDefault();
+        setBtnLoading(true);
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("description", description);
+        formData.append("file", video);
+
+        try {
+            const { data } = await axios.post(`${server}/api/course/${params.id}`, formData, {
+                headers: { token: localStorage.getItem("token") },
+            });
+            toast.success(data.message);
+            setShowAddLectureForm(false);
+            fetchLectures();
+            resetLectureForm();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "An error occurred while adding the lecture.");
+        } finally {
+            setBtnLoading(false);
+        }
+    };
+
+    const handleDeleteLecture = async (id) => {
+        if (confirm("Are you sure you want to delete this lecture?")) {
+            try {
+                const { data } = await axios.delete(`${server}/api/lecture/${id}`, {
+                    headers: { token: localStorage.getItem("token") },
+                });
+                toast.success(data.message);
+                fetchLectures();
+            } catch (error) {
+                toast.error(error.response?.data?.message || "An error occurred while deleting the lecture.");
+            }
+        }
+    };
+
+    const handleSubmitMeeting = async (e) => {
+        e.preventDefault();
+        const meetingData = { platform, meetingDate, meetingTime, meetingLink };
+
+        try {
+            const response = await axios.post(`${server}/api/course/${params.id}/meeting`, meetingData, {
+                headers: { token: localStorage.getItem("token") },
+            });
+            toast.success(response.data.message);
+            setMeetingFormVisible(false);
+            resetMeetingForm();
+            fetchCourseMeetings();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "An error occurred while creating the meeting.");
+        }
+    };
+    const handleDeleteMeeting = async (id) => {
+        if (confirm("Are you sure you want to delete this meeting?")) {
+            try {
+                const { data } = await axios.delete(`${server}/api/course/${params.id}/meeting/${id}`, {
+                    headers: { token: localStorage.getItem("token") },
+                });
+                toast.success(data.message);
+                fetchCourseMeetings();
+            } catch (error) {
+                toast.error(error.response?.data?.message || "An error occurred while deleting the meeting.");
+            }
+        }
+    };
+
+    const resetLectureForm = () => {
+        setTitle("");
+        setDescription("");
+        setVideo(null);
+        setVideoPreview("");
+    };
+
+    const resetMeetingForm = () => {
+        setMeetingLink("");
+        setMeetingDate("");
+        setMeetingTime("");
+        setPlatform("");
+    };
+
+    useEffect(() => {
         fetchLectures();
-      } catch (error) {
-        toast.error(error.response.data.message);
-      }
-    }
-  }
+    }, []);
 
-  useEffect(() => {
-    fetchLectures();
-  }, []);
+    const convertTo12Hour = (time24) => {
+        const [hours, minutes] = time24.split(':');
+        let period = 'AM';
+        let hours12 = parseInt(hours);
 
-  return (
-    <div className="min-h-screen bg-gray-100 py-10">
-      {loading ? (
-        <Loading />
-      ) : (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 bg-white rounded-lg overflow-hidden shadow-lg">
-              <div className="p-6">
-                {lecLoading ? (
-                  <Loading />
-                ) : (
-                  lecture.video ? (
-                    <>
-                      <video 
-                        src={`${server}/${lecture.video}`}
-                        width="100%"
-                        controls
-                        controlsList='nodownload noremoteplayback'
-                        disablePictureInPicture
-                        disableRemotePlayback
-                        autoPlay
-                        className="mb-4 rounded-lg shadow"
-                      />
-                      <h1 className="text-2xl font-bold mb-2">{lecture.title}</h1>
-                      <h3 className="text-lg text-gray-700">{lecture.description}</h3>
-                    </>
-                  ) : (
-                    <h1 className="text-2xl font-bold">Please Select a Lecture</h1>
-                  )
-                )}
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="p-6">
-                {user && user.role === "admin" && (
-                  <button 
-                    className="w-full mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-                    onClick={() => setShow(!show)}
-                  >
-                    {show ? "Close" : "Add Lecture"}
-                  </button>
-                )}
+        if (hours12 >= 12) {
+            period = 'PM';
+            if (hours12 > 12) hours12 -= 12;
+        }
+        if (hours12 === 0) hours12 = 12;
 
-                {show && (
-                  <div className="lecture-form mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Add Lecture</h2>
-                    <form onSubmit={submitHandler}>
-                      <div className="mb-4">
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
-                        <input 
-                          type="text" 
-                          value={title} 
-                          onChange={(e) => setTitle(e.target.value)} 
-                          required 
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                        />
-                      </div>
+        return `${hours12}:${minutes} ${period}`;
+    };
 
-                      <div className="mb-4">
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                        <input 
-                          type="text" 
-                          value={description} 
-                          onChange={(e) => setDescription(e.target.value)} 
-                          required 
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                        />
-                      </div>
 
-                      <div className="mb-4">
-                        <input 
-                          type="file"
-                          onChange={changeVideoHandler} 
-                          required 
-                          className="mt-1 block w-full"
-                        />
-                        {videoPrev && (
-                          <video 
-                            src={videoPrev} 
-                            width={300} 
-                            controls 
-                            className="mt-2"
-                          />
+    return (
+        <div className="container mx-auto p-6 min-h-screen overflow-y-auto pb-20">
+            {loading ? (
+                <Loading />
+            ) : (
+                <div className="flex flex-col md:flex-row gap-8">
+                    {/* Left Section - Lecture Content */}
+                    <div className="w-full md:w-2/3 p-6 bg-white rounded-lg shadow-md">
+                        {lecLoading ? (
+                            <Loading />
+                        ) : (
+                            <>
+                                {lecture.video ? (
+                                    <div className="mb-6">
+                                        <video
+                                            src={`${server}/${lecture.video}`}
+                                            className="w-full rounded-md mb-4"
+                                            controls
+                                        />
+                                        <h2 className="text-3xl font-semibold text-gray-800">{lecture.title}</h2>
+                                        <p className="text-lg text-gray-600">{lecture.description}</p>
+                                    </div>
+                                ) : (
+                                    <h2 className="text-xl font-semibold text-gray-800">Select a Lecture to View</h2>
+                                )}
+                            </>
                         )}
-                      </div>
-
-                      <button 
-                        disabled={btnLoading}
-                        type='submit' 
-                        className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300 disabled:opacity-50"
-                      >
-                        {btnLoading ? "Please Wait" : "Add"}
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {lectures && lectures.length > 0 ? (
-                  lectures.map((e, i) => (
-                    <div key={i} className="mb-4">
-                      <div 
-                        onClick={() => fetchLecture(e._id)}
-                        className={`p-3 cursor-pointer rounded-lg ${lecture._id === e._id ? 'bg-blue-200' : 'bg-gray-200'} hover:bg-blue-300 transition duration-300`}
-                      >
-                        {i + 1}. {e.title}
-                      </div>
-                      {user && user.role === "admin" && (
-                        <button 
-                          className="w-full mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
-                          onClick={() => deleteHandler(e._id)}
-                        >
-                          Delete {e.title}
-                        </button>
-                      )}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-center text-gray-500">No Lectures Yet</p>
-                )}
-              </div>
-            </div>
-          </div>
+
+                    {/* Right Section - Admin Controls */}
+                    <div className="w-full md:w-1/3 space-y-6">
+                        {user && user.role === "admin" && (
+                            <>
+                                <div className="flex justify-between items-center">
+                                    <button
+                                        onClick={() => setShowAddLectureForm(!showAddLectureForm)}
+                                        className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+                                    >
+                                        {showAddLectureForm ? "Close" : "Add Lecture"}
+                                    </button>
+                                </div>
+
+                                {showAddLectureForm && (
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h3 className="text-2xl font-semibold mb-4">Add New Lecture</h3>
+                                        <form onSubmit={handleSubmitLecture}>
+                                            <input
+                                                type="text"
+                                                value={title}
+                                                onChange={(e) => setTitle(e.target.value)}
+                                                placeholder="Lecture Title"
+                                                className="w-full p-3 mb-4 border rounded-md shadow-sm"
+                                                required
+                                            />
+                                            <input
+                                                type="text"
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                placeholder="Lecture Description"
+                                                className="w-full p-3 mb-4 border rounded-md shadow-sm"
+                                                required
+                                            />
+                                            <input
+                                                type="file"
+                                                onChange={handleVideoChange}
+                                                className="w-full mb-4"
+                                                required
+                                            />
+                                            {videoPreview && (
+                                                <video src={videoPreview} className="w-1/3 mb-4" controls />
+                                            )}
+                                            <button
+                                                type="submit"
+                                                disabled={btnLoading}
+                                                className="bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600 transition"
+                                            >
+                                                {btnLoading ? "Please Wait..." : "Add Lecture"}
+                                            </button>
+                                        </form>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => setMeetingFormVisible(!meetingFormVisible)}
+                                    className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+                                >
+                                    {meetingFormVisible ? "Close Meeting Form" : "Add Meeting"}
+                                </button>
+                                {meetingFormVisible && (
+                                    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full mx-auto">
+                                        <h3 className="text-2xl font-semibold mb-4">Create Meeting</h3>
+                                        <form onSubmit={handleSubmitMeeting} className="space-y-4">
+                                            {/* Platform Input */}
+                                            <div className="w-full">
+                                                <input
+                                                    type="text"
+                                                    value={platform}
+                                                    onChange={(e) => setPlatform(e.target.value)}
+                                                    placeholder="Platform"
+                                                    className="w-full p-3 mb-4 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                />
+                                            </div>
+
+                                            {/* Date Input */}
+                                            <div className="w-full">
+                                                <input
+                                                    type="date"
+                                                    value={meetingDate}
+                                                    onChange={(e) => setMeetingDate(e.target.value)}
+                                                    className="w-full p-3 mb-4 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                />
+                                            </div>
+
+                                            {/* Time Input */}
+                                            <div className="w-full">
+                                                <input
+                                                    type="time"
+                                                    value={meetingTime}
+                                                    onChange={(e) => setMeetingTime(e.target.value)}
+                                                    className="w-full p-3 mb-4 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                    step="60"
+                                                />
+                                            </div>
+
+                                            {/* Meeting Link Input */}
+                                            <div className="w-full">
+                                                <input
+                                                    type="url"
+                                                    value={meetingLink}
+                                                    onChange={(e) => setMeetingLink(e.target.value)}
+                                                    placeholder="Meeting Link"
+                                                    className="w-full p-3 mb-4 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                />
+                                            </div>
+
+                                            {/* Submit Button */}
+                                            <div className="flex justify-center">
+                                                <button
+                                                    type="submit"
+                                                    className="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 transition"
+                                                >
+                                                    Create Meeting
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                )}
+
+
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4">Lectures</h3>
+                                    {lectures.length ? (
+                                        lectures.map((lec, i) => (
+                                            <div key={lec._id} className="flex justify-between items-center mb-4">
+                                                <div
+                                                    onClick={() => fetchLecture(lec._id)}
+                                                    className={`cursor-pointer px-4 py-2 rounded-md hover:bg-gray-100 ${i === 0 ? "bg-blue-100" : "bg-gray-50"
+                                                        }`}
+                                                >
+                                                    {lec.title}
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeleteLecture(lec._id)}
+                                                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p>No lectures available</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4">Meetings</h3>
+                                    {courseMeetings.length ? (
+                                        courseMeetings.map((meeting) => (
+                                            <div key={meeting._id} className="flex justify-between items-center mb-4">
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold">{meeting.platform}</span>
+                                                    <span>Date: {new Date(meeting.meetingDate).toLocaleDateString()}</span>
+                                                    <span>Time: {convertTo12Hour(meeting.meetingTime)}</span>
+                                                    <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                                                        Join Meeting
+                                                    </a>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => handleDeleteMeeting(meeting._id)}
+                                                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p>No meetings scheduled</p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
-}
+    );
+};
 
 export default Lecture;
