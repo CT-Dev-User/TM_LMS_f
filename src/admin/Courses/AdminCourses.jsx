@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState, useRef } from 'react';
 import Layout from '../Utils/Layout';
 import { CourseData } from '../../context/CourseContext';
@@ -22,6 +20,7 @@ const AdminCourses = ({ user }) => {
     const navigate = useNavigate();
     if (user && user.role !== "admin") return navigate("/");
 
+    // State management
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("");
@@ -33,7 +32,7 @@ const AdminCourses = ({ user }) => {
     const [btnLoading, setBtnLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
 
-    const formRef = useRef(null); // Reference for scrolling
+    const formRef = useRef(null);
 
     const changeImageHandler = (e) => {
         const file = e.target.files[0];
@@ -85,9 +84,9 @@ const AdminCourses = ({ user }) => {
 
     return (
         <Layout>
-            <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                    <h1 className="text-3xl font-bold text-gray-800">All Courses</h1>
+            <div className="animate-fadeIn mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+                <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-6">All Courses</h2>
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
                     <button 
                         onClick={() => {
                             setShowForm(!showForm);
@@ -95,18 +94,17 @@ const AdminCourses = ({ user }) => {
                                 formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }
                         }} 
-                        className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+                        className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
                     >
                         {showForm ? "Hide Form" : "New Course"}
                     </button>
                 </div>
-               
 
                 {showForm && (
                     <div ref={formRef} className="mt-6 bg-white shadow-xl rounded-lg overflow-hidden mb-10">
-                        <div className="px-6 py-4">
-                            <h2 className="text-2xl font-semibold mb-6 text-gray-800">Add Course</h2>
-                            <form onSubmit={submitHandler} className="space-y-6">
+                        <div className="px-4 py-4 sm:px-6">
+                            <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-gray-800">Add Course</h2>
+                            <form onSubmit={submitHandler} className="space-y-4 sm:space-y-6">
                                 {[
                                     { label: 'Title', state: title, setState: setTitle, type: 'text' },
                                     { label: 'Description', state: description, setState: setDescription, type: 'text' },
@@ -148,23 +146,22 @@ const AdminCourses = ({ user }) => {
                                         onChange={changeImageHandler} 
                                         className="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     />
-                                    {imagePrev && <img src={imagePrev} alt="preview" className="mt-2 w-full h-48 object-cover rounded-md border border-gray-200" />}
+                                    {imagePrev && <img src={imagePrev} alt="preview" className="mt-2 w-full h-48 sm:h-64 object-cover rounded-md border border-gray-200" />}
                                 </div>
 
                                 <button 
                                     type='submit' 
                                     disabled={btnLoading} 
-                                    className="w-full py-3 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full py-2 px-4 sm:py-3 sm:px-6 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {btnLoading ? "Please Wait..." : "Add Course"}
                                 </button>
-                                
                             </form>
-                            
                         </div>
                     </div>
                 )}
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 ipadpro-landscape:grid-cols-3 gap-4 sm:gap-6 md:gap-8 lg:gap-10">
                     {courses && courses.length > 0 ? (
                         courses.map((course) => (
                             <CourseCard key={course._id} course={course} />

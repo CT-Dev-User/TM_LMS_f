@@ -168,6 +168,8 @@ const PlaylistDetail = ({ isSidebarOpen, isLargeScreen }) => {
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             lecture={currentVideo}
+            courseId={courseId} // Pass courseId here
+
           />
         </div>
       </div>
