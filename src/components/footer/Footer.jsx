@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="animate-fadeIn bg-[#8a5baf] text-white py-5 px-4 text-center">
       <div className="container flex flex-col items-center justify-between p-6 mx-auto space-y-4 sm:space-y-0 sm:flex-row w-full">
         <a href="#">
-          <img className="w-auto h-7" src="path-to-your-logo.svg" alt="TechMomentum Logo" />
+          <img className="w-auto h-7"  alt="TechMomentum Logo" />
         </a>
 
         <p className="text-sm">© 2025 TechMomentum. All Rights Reserved.</p>
