@@ -54,7 +54,7 @@ const CourseStudy = ({ user }) => {
                         variants={cardVariants}
                     >
                         <motion.img 
-                            src={`${server}/${course.image}`}
+                            src={course.image}
                             alt={course.title}
                             className="w-full h-auto max-h-[500px] object-cover"
                             initial={{ scale: 1.1 }}

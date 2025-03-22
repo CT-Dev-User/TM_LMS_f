@@ -105,7 +105,7 @@ export default function VideoContent({ activeSection, setActiveSection, lecture,
                     key={index}
                     className="flex flex-col items-center bg-white p-4 sm:p-6 mb-4 rounded-lg shadow-md"
                   >
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{meeting.platform}</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{meeting.platform} Meeting</h3>
                     <p className="text-sm sm:text-base text-gray-600 mb-4">
                       {meeting.meetingTime}, {new Date(meeting.meetingDate).toLocaleDateString()}
                     </p>

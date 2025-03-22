@@ -21,7 +21,7 @@ import Home from './pages/home/Home';
 import Lecture from './pages/lecture/Lecture';
 import Paymentsuccess from './pages/paymentSuccess/Paymentsuccess';
 import Prof from './pages/Profile/Prof.jsx';
-import PurchaseHistory from './pages/PurchaseHistory/PurcHis.jsx';
+import PurchaseHistory from './pages/PurchaseHistory/PurcHis.jsx'
 
 
 import AdminUsers from './admin/Users/AdminUsers';

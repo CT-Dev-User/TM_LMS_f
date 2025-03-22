@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import axios from 'axios';
+import { server } from '../../main'; // Import server from main.jsx
 
 const ForgetPass = () => {
   const [email, setEmail] = useState('');
@@ -17,13 +18,13 @@ const ForgetPass = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/api/user/forgot-password',
+        `${server}/api/user/forgot-password`, // Use server variable
         { email }
       );
-      console.log('Email Submit Response:', response.data); // Debug log
+      console.log('Email Submit Response:', response.data);
       setMessage('OTP sent to your email. Please check your inbox.');
       setResetStep('otp');
-      localStorage.setItem('resetToken', response.data.resetToken); // Assuming resetToken is returned
+      localStorage.setItem('resetToken', response.data.resetToken);
     } catch (err) {
       console.error('Error Sending OTP:', err.response?.data || err.message);
       setError(err.response?.data?.message || 'Failed to send OTP');
@@ -43,20 +44,20 @@ const ForgetPass = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/api/user/reset-password',
+        `${server}/api/user/reset-password`, // Use server variable
         {
           resetToken,
           otp,
           newPassword,
         }
       );
-      console.log('Reset Password Response:', response.data); // Debug log
+      console.log('Reset Password Response:', response.data);
       setMessage('Password reset successfully!');
-      setResetStep('email'); // Reset to the initial step
-      setEmail(''); // Clear form fields
+      setResetStep('email');
+      setEmail('');
       setOtp('');
       setNewPassword('');
-      localStorage.removeItem('resetToken'); // Clean up
+      localStorage.removeItem('resetToken');
     } catch (err) {
       console.error('Error Resetting Password:', err.response?.data || err.message);
       setError(err.response?.data?.message || 'Failed to reset password');
