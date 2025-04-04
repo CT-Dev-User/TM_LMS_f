@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import axios from 'axios';
-import { server } from '../../main'; // Import server from main.jsx
+import { server } from '../../main'; // Import server variable
 
 const ForgetPass = () => {
   const [email, setEmail] = useState('');
@@ -21,10 +21,10 @@ const ForgetPass = () => {
         `${server}/api/user/forgot-password`, // Use server variable
         { email }
       );
-      console.log('Email Submit Response:', response.data);
+      console.log('Email Submit Response:', response.data); // Debug log
       setMessage('OTP sent to your email. Please check your inbox.');
       setResetStep('otp');
-      localStorage.setItem('resetToken', response.data.resetToken);
+      localStorage.setItem('resetToken', response.data.resetToken); // Assuming resetToken is returned
     } catch (err) {
       console.error('Error Sending OTP:', err.response?.data || err.message);
       setError(err.response?.data?.message || 'Failed to send OTP');
@@ -51,13 +51,13 @@ const ForgetPass = () => {
           newPassword,
         }
       );
-      console.log('Reset Password Response:', response.data);
+      console.log('Reset Password Response:', response.data); // Debug log
       setMessage('Password reset successfully!');
-      setResetStep('email');
-      setEmail('');
+      setResetStep('email'); // Reset to the initial step
+      setEmail(''); // Clear form fields
       setOtp('');
       setNewPassword('');
-      localStorage.removeItem('resetToken');
+      localStorage.removeItem('resetToken'); // Clean up
     } catch (err) {
       console.error('Error Resetting Password:', err.response?.data || err.message);
       setError(err.response?.data?.message || 'Failed to reset password');

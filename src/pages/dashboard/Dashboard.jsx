@@ -1,13 +1,12 @@
-/* eslint-disable react/prop-types */
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { BiCheckCircle } from "react-icons/bi";
 import { FaRegClock } from "react-icons/fa";
 import { GrCertificate } from "react-icons/gr";
 import { PiBookOpenBold } from "react-icons/pi";
-import ContentCard from "./ContentCard";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { CourseData } from "../../context/CourseContext";
 import { UserData } from "../../context/UserContext";
+import ContentCard from "./ContentCard";
 
 const DashboardPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -34,42 +33,31 @@ const DashboardPage = () => {
 
   if (!myCourses)
     return (
-      <div className=" h-screen flex items-center justify-center animate-pulse">
+      <div className="h-screen flex items-center justify-center animate-pulse">
         Loading...
       </div>
     );
 
   if (error)
     return (
-      <div className="h-screen flex items-center justify-center animate-pulse">
+      <div className="h-screen flex items-center justify-center animate-pulse ml-4">
         Error: {error}
       </div>
     );
 
   return (
-    <div className="w-full flex-grow flex flex-col lg:h-screen md:h-screen sm:h-auto">
-      <div className="flex flex-grow relative">
-        {/* Sidebar */}
-        <div
-          className={`custom-margin w-[16%] ml-8 md:w-[10%] lg:w-[1%] ipad:w-[17%] ipad-landscape:w-[17%] ipad-pro:w-[17%] ipad-pro-landscape:w-[17%] ${
-            isSidebarOpen || isLargeScreen ? "block" : "hidden"
-          }`}
-        >
-          <Sidebar
-            isSidebarOpen={isSidebarOpen || isLargeScreen}
-            setIsSidebarOpen={setIsSidebarOpen}
-            user={user}
-            course={myCourses}
-          />
-        </div>
+    <div className="w-full flex-grow flex flex-col min-h-screen">
+    <div className="flex flex-grow relative">
+      {/* Sidebar */}
+       {/* Sidebar - Hidden on Small and Medium Screens */}
+    {isLargeScreen && (
+      <Sidebar user={user} course={myCourses} />
+    )}
 
         {/* Main Content */}
         <main
-          className={`flex-grow p-4 animate-fadeIn ${
-            isSidebarOpen || isLargeScreen
-              ? "lg:ml-[17%] ipad:ml-[17%] ipad-landscape:ml-[17%] ipad-pro:ml-[17%] ipad-pro-landscape:ml-[20%]"
-              : ""
-          }`}
+          className={"flex-grow p-4 mb-16 animate-fadeIn"}
+          
         >
           {/* Stats Section */}
           <div className="w-full mt-4 mb-10 flex flex-wrap gap-2 md:gap-2 lg:gap-4 animate-fadeIn">
@@ -110,7 +98,7 @@ const DashboardPage = () => {
                 <h2 className="text-2xl font-semibold pb-5">
                   Continue Learning
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 ipadpro-landscape:grid-cols-3 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   {myCourses.map((course) => (
                     <ContentCard key={course._id} course={course} />
                   ))}
@@ -142,3 +130,4 @@ const StatCard = ({ title, count, icon, bgColor, textColor }) => (
 );
 
 export default DashboardPage;
+

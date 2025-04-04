@@ -160,8 +160,31 @@ async function registerUser(name , email,password,navigate){
 }
 
 
+// Update the fetchPayoutData function in UserContext.jsx
+const fetchPayoutData = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const { data: summaryData } = await axios.get(`${server}/api/summary`, {
+      headers: { token }
+    });
+    const { data: historyData } = await axios.get(`${server}/api/history`, {
+      headers: { token }
+    });
+    
+    return {
+      summary: summaryData,
+      history: historyData
+    };
+  } catch (error) {
+    toast.error("Failed to fetch payout data");
+    return null;
+  }
+};
+
+
+
     return (
-        <UserContext.Provider value={{ user,updateProfile, setUser, isAuth, setIsAuth, btnLoading, setBtnLoading, loginUser,loading ,registerUser,fetchUser,verifyOtp}}>
+        <UserContext.Provider value={{ user,updateProfile, setUser, isAuth, setIsAuth, btnLoading, setBtnLoading, loginUser,loading ,registerUser,fetchUser,verifyOtp,fetchPayoutData}}>
             {children}
             <Toaster />
         </UserContext.Provider>

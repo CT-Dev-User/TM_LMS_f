@@ -32,9 +32,9 @@ const Verify = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row space-x-24 items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col md:flex-row space-x-24 items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-0 md:space-x-24">
       {/* Image Section */}
-      <div className="mb-8 md:mb-0 md:mr-8">
+      <div className="mb-4 md:mb-0 md:mr-8">
         <img src={image} alt="img" className='w-72 sm:w-96' />
       </div>
 

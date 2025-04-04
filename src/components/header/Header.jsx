@@ -29,7 +29,7 @@ const Header = ({ isAuth, handleLogout }) => {
             </Link>
           ) : (
             <>
-              {user && user.role !== "admin" && (
+              {user && user.role === "user" && (
                 <Link to="/my-courses" className="text-gray-800 hover:text-[#8a4baf] transition-colors duration-300">
                   My Courses
                 </Link>
@@ -37,6 +37,11 @@ const Header = ({ isAuth, handleLogout }) => {
               {user && user.role === "admin" && (
                 <Link to="/admin/dashboard" className="text-gray-800 hover:text-[#8a4baf] transition-colors duration-300">
                   Admin Dashboard
+                </Link>
+              )}
+              {user && user.role === "instructor" && (
+                <Link to="/instructor/dashboard" className="text-gray-800 hover:text-[#8a4baf] transition-colors duration-300">
+                  Instructor Dashboard
                 </Link>
               )}
               <DropdownMenu user={user} setIsAuth={handleLogout} />
