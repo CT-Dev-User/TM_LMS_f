@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AdminCourses from './admin/Courses/AdminCourses';
 import AdminDashboard from './admin/Dashboard/AdminDashboard';
+import AdminUsers from './admin/Users/AdminUsers';
 import './App.css';
 import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
@@ -21,15 +22,14 @@ import Lecture from './pages/lecture/Lecture';
 import Paymentsuccess from './pages/paymentSuccess/Paymentsuccess';
 import Prof from './pages/Profile/Prof.jsx';
 import PurchaseHistory from './pages/PurchaseHistory/PurcHis.jsx';
-import AdminUsers from './admin/Users/AdminUsers';
 // New instructor imports - you'll need to create these components
-import InstructorDashboard from './instructor/InstructorDash.jsx';
-import Students from './instructor/students.jsx';
 import InstructorCourses from './instructor/instructorCourse.jsx';
 import InstructorCourseManagement from './instructor/InstructorCourseManagement.jsx';
+import InstructorDashboard from './instructor/InstructorDash.jsx';
+import Students from './instructor/students.jsx';
 
 
-import PayoutReport from './instructor/PayoutReport.jsx'
+import PayoutReport from './instructor/PayoutReport.jsx';
 const App = () => {
   const { isAuth, user, loading } = UserData();
 
@@ -77,6 +77,8 @@ const App = () => {
             />
 
 <Route path="/instructor/payoutreport" element={isAuth ? <PayoutReport user={user} /> : <Login />} />
+
+
 
           </Routes>
           <Footer />

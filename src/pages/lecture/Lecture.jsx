@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import Loading from '../../components/loading/Loading.jsx';
+import AnswerForm from '../../instructor/AnswerForm.jsx';
 import { server } from '../../main';
 
 const Lecture = ({ user }) => {
@@ -389,6 +390,15 @@ const Lecture = ({ user }) => {
                             </>
                         )}
                     </div>
+
+                    
+                </div>
+            )}
+            {/* Course Questions Section - Available to both instructors and admins */}
+            {user && (user.role === 'admin' || user.role === 'instructor') && (
+                <div className="mt-8  p-6">
+                    {/* <h2 className="text-2xl font-semibold mb-4"></h2> */}
+                    <AnswerForm courseId={params.id} />
                 </div>
             )}
         </div>

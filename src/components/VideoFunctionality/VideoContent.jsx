@@ -321,11 +321,11 @@ export default function VideoContent({
           )}
 
           {activeSection === "forum" && (
-            <div className="flex justify-center items-center animate-fadeIn">
-              <div className="w-full max-w-4xl">
+            <div className="animate-fadeIn">
+              <h3 className="text-xl sm:text-2xl font-bold text-blue-500 mb-4">Forum</h3>
+
                 <Forum />
               </div>
-            </div>
           )}
         </div>
       </div>

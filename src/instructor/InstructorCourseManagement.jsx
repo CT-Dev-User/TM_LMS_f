@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { server } from "../main";
+import CourseQuestions from "./AnswerForm.jsx";
 import Sidebar from "./Sidebar";
 
 const InstructorCourseManagement = ({ user }) => {
@@ -44,7 +45,6 @@ const InstructorCourseManagement = ({ user }) => {
       );
       setCourseMeetings(data.meetings);
     } catch (error) {
-      console.error("Failed to fetch meetings:", error);
       toast.error("Error fetching meetings.");
       setError("Failed to fetch meetings.");
     }
@@ -68,16 +68,12 @@ const InstructorCourseManagement = ({ user }) => {
           );
           submissionsData[assignment._id] = subData;
         } catch (subError) {
-          console.error(
-            `Failed to fetch submissions for assignment ${assignment._id}:`,
-            subError
-          );
+          
           submissionsData[assignment._id] = { submissions: [] };
         }
       }
       setSubmissions(submissionsData);
     } catch (error) {
-      console.error("Failed to fetch assignments:", error);
       toast.error("Error fetching assignments.");
       setError("Failed to fetch assignments.");
     } finally {
@@ -132,10 +128,7 @@ const InstructorCourseManagement = ({ user }) => {
         maxMarks: 1,
       });
     } catch (error) {
-      console.error(
-        "Error creating assignment:",
-        error.response?.data || error.message
-      );
+      
       toast.error(
         error.response?.data?.message || "Error creating assignment."
       );
@@ -160,10 +153,7 @@ const InstructorCourseManagement = ({ user }) => {
       delete updatedSubmissions[assignmentId];
       setSubmissions(updatedSubmissions);
     } catch (error) {
-      console.error(
-        "Failed to delete assignment:",
-        error.response?.data || error.message
-      );
+      
       toast.error(
         error.response?.data?.message || "Error deleting assignment."
       );
@@ -189,10 +179,7 @@ const InstructorCourseManagement = ({ user }) => {
       }));
       setEditingMarks((prev) => ({ ...prev, [submissionId]: false }));
     } catch (error) {
-      console.error(
-        "Failed to update marks:",
-        error.response?.data || error.message
-      );
+      
       toast.error(error.response?.data?.message || "Error updating marks.");
     }
   };
@@ -807,6 +794,8 @@ const InstructorCourseManagement = ({ user }) => {
                 </div>
               )}
             </div>
+            <CourseQuestions courseId={params.id} />
+
           </div>
         )}
       </main>
