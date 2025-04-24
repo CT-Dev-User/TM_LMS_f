@@ -9,7 +9,7 @@ import App from './App.jsx'
 import { CourseContextProvider } from './context/CourseContext.jsx'
 import { UserContextProvider } from './context/UserContext.jsx'
 
-export const server = 'http://localhost:3000'
+export const server = 'https://lms-backend-tau-plum.vercel.app'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
