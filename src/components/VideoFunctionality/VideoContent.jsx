@@ -3,48 +3,107 @@ import { FaFileAlt } from "react-icons/fa";
 import { PiBookmarkSimpleThin, PiChats, PiVideoCameraFill } from "react-icons/pi";
 import { server } from "../../main";
 import Forum from "./AddQ";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-export default function VideoContent({ activeSection, setActiveSection, lecture, courseId }) {
+export default function VideoContent({
+  activeSection,
+  setActiveSection,
+  lecture,
+  courseId,
+  onSelectAssignment,
+}) {
   const [meetings, setMeetings] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [submissionData, setSubmissionData] = useState({});
+  const [expandedAssignment, setExpandedAssignment] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const userName = localStorage.getItem("userName");
 
-
-  // Fetch meetings based on courseId
   useEffect(() => {
-    const fetchMeetings = async () => {
-      if (courseId) {
-        try {
-          const response = await fetch(`${server}/api/lecture/${courseId}/meetings`, {
-            headers: {
-              token: localStorage.getItem("token"), // Assuming the token is used for authorization
-            },
-          });
-          const data = await response.json();
-          if (data.success) {
-            setMeetings(data.meetings);
-          } else {
-            setError("Failed to fetch meetings.");
-          }
-        } catch (err) {
-          console.error("Error fetching meetings:", err);
-          setError("An error occurred while fetching meetings.");
-        } finally {
-          setLoading(false);
+    const fetchData = async () => {
+      if (!courseId) return;
+
+      try {
+        const meetingsResponse = await fetch(`${server}/api/lecture/${courseId}/meetings`, {
+          headers: { token: localStorage.getItem("token") },
+        });
+        const meetingsData = await meetingsResponse.json();
+        if (meetingsData.success) {
+          setMeetings(meetingsData.meetings);
+        } else {
+          setError("Failed to fetch meetings.");
         }
+
+        const assignmentsResponse = await axios.get(`${server}/api/course/${courseId}/assignments`, {
+          headers: { token: localStorage.getItem("token") },
+        });
+        if (assignmentsResponse.data.success) {
+          setAssignments(assignmentsResponse.data.assignments);
+        } else {
+          setError("Failed to fetch assignments.");
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchMeetings();
+    fetchData();
   }, [courseId]);
-  // Loading or error state handling
-  if (loading) {
-    return <div>Loading meetings...</div>;
-  }
 
-  if (error) {
-    return <div>{error}</div>;
-  }
+  const handleSubmissionChange = (assignmentId, questionIndex, answer) => {
+    setSubmissionData((prev) => ({
+      ...prev,
+      [assignmentId]: {
+        ...prev[assignmentId],
+        [questionIndex]: answer,
+      },
+    }));
+  };
+
+  const submitAssignment = async (assignmentId) => {
+    const answers = submissionData[assignmentId]
+      ? Object.entries(submissionData[assignmentId]).map(([questionIndex, answer]) => ({
+          questionIndex: parseInt(questionIndex),
+          answer,
+        }))
+      : [];
+
+    if (answers.length === 0) {
+      toast.error("Please answer at least one question.");
+      return;
+    }
+
+    try {
+      const { data } = await axios.post(
+        `${server}/api/assignment/${assignmentId}/submit`,
+        { answers },
+        { headers: { token: localStorage.getItem("token") } }
+      );
+      toast.success("Test submitted successfully!", { duration: 3000 });
+      const { data: updatedAssignments } = await axios.get(`${server}/api/course/${courseId}/assignments`, {
+        headers: { token: localStorage.getItem("token") } }
+      );
+      setAssignments(updatedAssignments.assignments);
+      setSubmissionData((prev) => ({ ...prev, [assignmentId]: {} }));
+      setExpandedAssignment(null);
+    } catch (error) {
+      console.error("Error submitting assignment:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Error submitting assignment.");
+    }
+  };
+
+  const toggleAssignment = (assignmentId) => {
+    setExpandedAssignment(expandedAssignment === assignmentId ? null : assignmentId);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="mt-2 flex justify-center px-2 sm:px-4 animate-fadeIn">
@@ -62,7 +121,7 @@ export default function VideoContent({ activeSection, setActiveSection, lecture,
               className={`flex items-center gap-2 px-3 py-2 text-sm sm:text-base font-medium transition-all duration-300 ${
                 activeSection === section
                   ? "text-purple-500 border-b-2 border-purple-500"
-                  : "text-gray-100 hover:text-purple-400"
+                  : "text-white hover:text-purple-400"
               } animate-fadeIn`}
             >
               {icon}
@@ -91,8 +150,8 @@ export default function VideoContent({ activeSection, setActiveSection, lecture,
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
                 {lecture?.title || "Untitled Lecture"}
               </h3>
-              <p className="text-gray-600">{lecture?.description || "No description available for this lecture."}</p>
-              <p className="text-base sm:text-lg text-gray-700">Total 0 Assignments</p>
+              <p className="text-gray-600">{lecture?.description || "No description available."}</p>
+              <p className="text-base sm:text-lg text-gray-700">Total {assignments.length} Assignments</p>
             </div>
           )}
 
@@ -105,7 +164,7 @@ export default function VideoContent({ activeSection, setActiveSection, lecture,
                     key={index}
                     className="flex flex-col items-center bg-white p-4 sm:p-6 mb-4 rounded-lg shadow-md"
                   >
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{meeting.platform} Meeting</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{meeting.platform}</h3>
                     <p className="text-sm sm:text-base text-gray-600 mb-4">
                       {meeting.meetingTime}, {new Date(meeting.meetingDate).toLocaleDateString()}
                     </p>
@@ -128,17 +187,145 @@ export default function VideoContent({ activeSection, setActiveSection, lecture,
 
           {activeSection === "assignment" && (
             <div className="animate-fadeIn">
-              <h2 className="text-xl sm:text-2xl font-bold text-blue-500 mb-4">Assignment</h2>
-              <p className="text-base sm:text-lg text-gray-700">Total 0 Assignments.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-500 mb-4">Assignments</h2>
+              {assignments.length > 0 ? (
+                assignments.map((assignment) => {
+                  const hasSubmitted = assignment.submissions.some(
+                    (sub) => sub.student.toString() === userId
+                  );
+                  const isPastDeadline = assignment.deadline && new Date() > new Date(assignment.deadline);
+                  const isExpanded = expandedAssignment === assignment._id;
+
+                  return (
+                    <div
+                      key={assignment._id}
+                      className="bg-white p-4 sm:p-6 mb-4 rounded-lg shadow-md animate-slideUp"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
+                            {assignment.title}
+                          </h3>
+                          <p className="text-gray-600 mb-2">{assignment.description}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            toggleAssignment(assignment._id);
+                            onSelectAssignment(assignment); // Switch to TestPlayer
+                          }}
+                          className="bg-indigo-500 text-white px-4 py-2 rounded-full hover:bg-indigo-600"
+                        >
+                          {isExpanded ? "Hide Details" : "Take Test"}
+                        </button>
+                      </div>
+
+                      {isExpanded && !onSelectAssignment && (
+                        <div className="mt-4">
+                          {hasSubmitted ? (
+                            <p className="text-green-600 text-sm">You have already submitted this test.</p>
+                          ) : isPastDeadline ? (
+                            <p className="text-red-600 text-sm">Deadline passed.</p>
+                          ) : (
+                            <>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-semibold">Assigned by:</span> {assignment.instructor.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-semibold">Deadline:</span>{" "}
+                                {assignment.deadline
+                                  ? new Date(assignment.deadline).toLocaleString()
+                                  : "No deadline"}
+                              </p>
+                              <div className="mt-2 space-y-4">
+                                {assignment.questions.map((question, index) => (
+                                  <div key={index}>
+                                    <p className="text-sm font-semibold text-gray-700">
+                                      {index + 1}. {question.questionText} ({question.type}, Max Marks: {question.maxMarks})
+                                    </p>
+                                    {question.type === "mcq" && (
+                                      <div className="mt-1 space-y-2">
+                                        {question.options.map((option, optIndex) => (
+                                          <label
+                                            key={optIndex}
+                                            className="flex items-center space-x-2 text-gray-700"
+                                          >
+                                            <input
+                                              type="radio"
+                                              name={`question-${assignment._id}-${index}`}
+                                              checked={
+                                                submissionData[assignment._id]?.[index] === option.text
+                                              }
+                                              onChange={() =>
+                                                handleSubmissionChange(assignment._id, index, option.text)
+                                              }
+                                              className="form-radio h-4 w-4 text-blue-600"
+                                            />
+                                            <span>{option.text}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {question.type === "true-false" && (
+                                      <div className="mt-1 space-y-2">
+                                        {question.options.map((option, optIndex) => (
+                                          <label
+                                            key={optIndex}
+                                            className="flex items-center space-x-2 text-gray-700"
+                                          >
+                                            <input
+                                              type="radio"
+                                              name={`question-${assignment._id}-${index}`}
+                                              checked={
+                                                submissionData[assignment._id]?.[index] === option.text
+                                              }
+                                              onChange={() =>
+                                                handleSubmissionChange(assignment._id, index, option.text)
+                                              }
+                                              className="form-radio h-4 w-4 text-blue-600"
+                                            />
+                                            <span>{option.text}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {question.type === "free-text" && (
+                                      <textarea
+                                        className="mt-1 w-full border-gray-300 rounded-md shadow-sm p-2 text-gray-800 bg-white"
+                                        placeholder="Enter your answer here"
+                                        value={submissionData[assignment._id]?.[index] || ""}
+                                        onChange={(e) =>
+                                          handleSubmissionChange(assignment._id, index, e.target.value)
+                                        }
+                                      />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => submitAssignment(assignment._id)}
+                                className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
+                              >
+                                Submit Test
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-gray-600">No assignments available for this course.</p>
+              )}
             </div>
           )}
 
           {activeSection === "forum" && (
-            <div className="flex justify-center items-center animate-fadeIn">
-              <div className="w-full max-w-4xl">
+            <div className="animate-fadeIn">
+              <h3 className="text-xl sm:text-2xl font-bold text-blue-500 mb-4">Forum</h3>
+
                 <Forum />
               </div>
-            </div>
           )}
         </div>
       </div>

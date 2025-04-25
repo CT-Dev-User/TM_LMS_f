@@ -1,218 +1,147 @@
-
-import React, { useEffect, useState } from 'react';
-import { MdDashboard } from "react-icons/md";
-import { useNavigate } from 'react-router-dom';
-import { CourseData } from '../../context/CourseContext';
-import './PurcHis.css';
-import Sidebar from "../../components/Sidebar/Sidebar"; // Adjust the import path as necessary
-import { UserData } from "../../context/UserContext"; // Assuming you need user data
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import { CourseData } from "../../context/CourseContext";
+import { UserData } from "../../context/UserContext";
+import { server } from "../../main";
 
 const PurchaseHistory = () => {
+  const { mycourse: myCourses, fetchMyCourse } = CourseData();
   const { user } = UserData();
-  const { purchaseHistory, fetchPurchaseHistory, mycourse: myCourses } = CourseData();
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [timeFilter, setTimeFilter] = useState('all');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
 
   useEffect(() => {
-    const loadPurchaseHistory = async () => {
-      try {
-        await fetchPurchaseHistory();
-      } catch (error) {
-        console.log("Error loading purchase history:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPurchaseHistory();
-
     const handleResize = () => {
       setIsLargeScreen(window.innerWidth >= 1024);
     };
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initial check
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const getFilteredPurchases = () => {
-    let filtered = Array.isArray(purchaseHistory) ? [...purchaseHistory] : [];
-    
-    if (searchTerm) {
-      filtered = filtered.filter(purchase => 
-        purchase.course.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  useEffect(() => {
+    if (!myCourses || myCourses.length === 0) {
+      fetchMyCourse().catch(() => setError("Failed to load your courses"));
     }
-    
-    const now = new Date();
-    
-    switch(timeFilter) {
-      case 'month':
-        { const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-        filtered = filtered.filter(purchase => {
-          const purchaseDate = new Date(purchase.date);
-          return purchaseDate >= lastMonth && purchaseDate <= lastDayOfMonth;
-        });
-        break; }
-        
-      case 'year':
-        { const lastYear = new Date(now);
-        lastYear.setFullYear(lastYear.getFullYear() - 1);
-        filtered = filtered.filter(purchase => {
-          const purchaseDate = new Date(purchase.date);
-          return purchaseDate >= lastYear;
-        });
-        break; }
-        
-      default:
-        break;
-    }
-    
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-    return filtered;
+  }, [fetchMyCourse, myCourses]);
+
+  const handleStudyClick = (course) => {
+    const safeTitle = course.title.toLowerCase().replace(/[^a-zA-Z0-9]/g, "-");
+    navigate(`/${safeTitle}/lectures/${course._id}`, { state: { course } });
   };
 
-  const handleExport = () => {
-    const filteredData = getFilteredPurchases();
-    const csvContent = [
-      ['Course', 'Date', 'Amount', 'Status', 'Invoice'],
-      ...filteredData.map(purchase => [
-        purchase.course,
-        new Date(purchase.date).toLocaleDateString(),
-        purchase.amount,
-        purchase.status,
-        purchase.invoice
-      ])
-    ].map(row => row.join(',')).join('\n');
+  const filteredCourses = myCourses?.filter((course) =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    course.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    course.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'purchase-history.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-  if (loading) {
-    return (
-      <div className="w-full flex-grow flex flex-col">
-        <div className="flex flex-grow relative">
-          <div className="h-screen flex items-center justify-center animate-pulse">
-            Loading...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const filteredPurchases = getFilteredPurchases();
+  if (!myCourses) return <div className="h-screen flex items-center justify-center animate-pulse">Loading...</div>;
+  if (error) return <div className="h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
 
   return (
-    <div className="w-full flex-grow flex flex-col">
-      <div className="flex flex-grow relative">
-        <div
-          className={`custom-margin w-[16%] ml-8 md:w-[10%] lg:w-[1%] ipad:w-[17%] ipad-landscape:w-[17%] ipad-pro:w-[17%] ipad-pro-landscape:w-[17%] ${
-            isSidebarOpen || isLargeScreen ? "block" : "hidden"
-          }`}
-        >
-          <Sidebar
-            isSidebarOpen={isSidebarOpen || isLargeScreen}
-            setIsSidebarOpen={setIsSidebarOpen}
-            user={user}
-            course={myCourses}
-          />
-        </div>
+    <div className="flex bg-gray-100 min-h-screen">
+      {/* Sidebar - Hidden on Small and Medium Screens */}
+      {isLargeScreen && (
+        <Sidebar user={user} course={myCourses} />
+      )}
 
-        <main
-          className={`flex-grow p-4 animate-fadeIn ${
-            isSidebarOpen || isLargeScreen
-              ? "lg:ml-[17%] ipad:ml-[17%] ipad-landscape:ml-[17%] ipad-pro:ml-[17%] ipad-pro-landscape:ml-[20%]"
-              : ""
-          }`}
-        >
-          <div className="purchase-container">
-            <div className="purchase-card">
-              <h1 className="purchase-title">Purchase History</h1>
-              <p className="purchase-subtitle">View all your course purchases and transactions</p>
+      {/* Main Content - Expands Fully on Small & Medium Screens */}
+      <div className={`flex-grow p-6 ${isLargeScreen ? "ml-[50px]" : "ml-0"}`}>
+        <div className="max-w-7xl mx-auto bg-white rounded-lg shadow p-6">
+          <h1 className="text-2xl font-bold text-gray-800">Purchase History</h1>
+          <p className="text-gray-600 text-sm mt-1">View your purchased courses</p>
 
-              <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search purchases..."
-                  className="search-input"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <div className="filter-container">
-                  <select 
-                    className="filter-select"
-                    value={timeFilter}
-                    onChange={(e) => setTimeFilter(e.target.value)}
-                  >
-                    <option value="all">All Time</option>
-                    <option value="month">Last Month</option>
-                    <option value="year">Last Year</option>
-                  </select>
-                  <button className="export-button" onClick={handleExport}>
-                    Export
-                  </button>
-                </div>
-              </div>
+          {/* Search Input */}
+          <div className="mt-4">
+            <input
+              type="text"
+              placeholder="Search by course, category, or instructor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-purple-600"
+            />
+          </div>
 
-              <div className="table-container">
-                {filteredPurchases.length === 0 ? (
-                  <div className="no-purchases">
-                    <p>No subscription history found for the selected period</p>
-                    <button 
-                      onClick={() => navigate('/courses')} 
-                      className="browse-courses-btn"
-                    >
-                      <MdDashboard />
-                      Get Subscription
-                    </button>
-                  </div>
-                ) : (
-                  <table className="purchase-table">
-                    <thead className="table-header">
-                      <tr>
-                        <th>Course</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Invoice</th>
+          <div className="overflow-x-auto mt-6">
+            {/* Table View for Large Screens */}
+            <div className="hidden lg:block">
+              <table className="w-full border border-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Course</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Instructor</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredCourses.length > 0 ? (
+                    filteredCourses.map((course) => (
+                      <tr key={course._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 flex items-center">
+                          <img src={course.image} alt={course.title} className="h-10 w-10 rounded-full object-cover" />
+                          <span className="ml-4 text-sm font-medium text-gray-900">{course.title}</span>
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-900">{course.createdBy}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">₹{course.price}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">{course.category}</td>
+                        <td className="px-4 py-2 text-sm text-gray-500">{course.duration} Weeks</td>
+                        <td className="px-4 py-2">
+                          <button
+                            onClick={() => handleStudyClick(course)}
+                            className="bg-yellow-200 font-bold text-yellow-800 hover:bg-yellow-400 px-4 py-2 rounded-md transition"
+                          >
+                            Study
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredPurchases.map((purchase, index) => (
-                        <tr key={index} className="table-row">
-                          <td className="course-cell">
-                            <img
-                              src={purchase.image}
-                              alt={purchase.course}
-                              className="course-image"
-                            />
-                            <span>{purchase.course}</span>
-                          </td>
-                          <td>{new Date(purchase.date).toLocaleDateString()}</td>
-                          <td>{purchase.amount}</td>
-                          <td>
-                            <span className={`status-badge ${purchase.status === 'Completed' ? 'status-completed' : 'status-pending'}`}>
-                              {purchase.status}
-                            </span>
-                          </td>
-                          <td className="invoice-link">{purchase.invoice}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="px-4 py-4 text-center text-gray-500">No courses found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Card View for Small Screens */}
+            <div className="lg:hidden">
+              {filteredCourses.length > 0 ? (
+                filteredCourses.map((course) => (
+                  <div key={course._id} className="bg-white shadow-md rounded-lg p-4 mb-4">
+                    <div className="flex items-center">
+                      <img src={course.image} alt={course.title} className="h-14 w-14 rounded-full object-cover" />
+                      <div className="ml-4">
+                        <h2 className="text-lg font-bold text-gray-900">{course.title}</h2>
+                        <p className="text-sm text-gray-600">Instructor: {course.createdBy}</p>
+                        <p className="text-sm text-gray-600">Category: {course.category}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-between items-center">
+                      <span className="text-sm text-gray-800 font-semibold">₹{course.price}</span>
+                      <span className="text-xs text-gray-500">{course.duration} Weeks</span>
+                      <button
+                        onClick={() => handleStudyClick(course)}
+                        className="bg-yellow-200 text-sm font-bold text-yellow-800 hover:bg-yellow-400 px-3 py-2 rounded-md transition"
+                      >
+                        Study
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500">No courses found.</div>
+              )}
             </div>
           </div>
-        </main>
+
+        </div>
       </div>
     </div>
   );

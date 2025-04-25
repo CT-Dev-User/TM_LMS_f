@@ -1,35 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash } from "react-icons/fa";
 import { IoMdLogOut } from "react-icons/io";
-import { useNavigate } from 'react-router-dom';
-import { UserData } from "../../context/UserContext";
-import Sidebar from "../../components/Sidebar/Sidebar";
-import { server } from '../../main';
+import { useNavigate } from "react-router-dom";
+import Layout from "../../admin/Utils/Layout.jsx";
+import UserSidebar from "../../components/Sidebar/Sidebar";
 import { CourseData } from "../../context/CourseContext";
+import { UserData } from "../../context/UserContext";
+import InstructorSidebar from "../../instructor/Sidebar.jsx";
+import { server } from "../../main";
 
 const ProfileSettings = ({ user }) => {
-  const { setIsAuth, setUser } = UserData();
+  const { setIsAuth, setUser, logoutUser } = UserData();
   const [profileImage, setProfileImage] = useState(user?.profileImage || null);
   const [formData, setFormData] = useState({
-    firstName: user?.name?.split(' ')[0] || "",
-    lastName: user?.name?.split(' ')[1] || "",
-    email: user?.email || ""
+    firstName: user?.name?.split(" ")[0] || "",
+    lastName: user?.name?.split(" ")[1] || "",
+    email: user?.email || "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false); // New loading state
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // New loading state for logout
+
   const { mycourse: myCourses, fetchMyCourse } = CourseData();
   const [error, setError] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024);
-    };
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Initial check
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!myCourses || myCourses.length === 0) {
@@ -39,111 +34,82 @@ const ProfileSettings = ({ user }) => {
 
   useEffect(() => {
     if (user) {
-      const names = user.name?.split(' ') || ['', ''];
+      const names = user.name?.split(" ") || ["", ""];
       setFormData({
         firstName: names[0] || "",
         lastName: names[1] || "",
-        email: user.email || ""
+        email: user.email || "",
       });
-      
+
       if (user.profileImage) {
         setProfileImage(user.profileImage);
       }
     }
   }, [user]);
 
-  const navigate = useNavigate();
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const getInitials = (firstName, lastName) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  };
+    if (file.size > 5000000) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
 
-  const handleImageClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        if (file.size > 5000000) {
-          toast.error("Image size should be less than 5MB");
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const imageData = e.target.result;
-          try {
-            const updatedData = {
-              name: `${formData.firstName} ${formData.lastName}`.trim(),
-              profileImage: imageData,
-              profileComplete: true
-            };
-
-            const token = localStorage.getItem("token");
-            const response = await axios.put(
-              `${server}/api/user/update-profile`,
-              updatedData,
-              {
-                headers: { 
-                  token,
-                  'Content-Type': 'application/json'
-                }
-              }
-            );
-            
-            if (response.data.success) {
-              setProfileImage(imageData);
-              const updatedUser = { 
-                ...user, 
-                name: updatedData.name,
-                profileImage: imageData 
-              };
-              setUser(updatedUser);
-              localStorage.setItem('profileImage', imageData);
-              localStorage.setItem('user', JSON.stringify(updatedUser));
-              toast.success("Profile photo updated successfully");
-            }
-          } catch (error) {
-            toast.error("Failed to update profile photo");
-          }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const imageData = e.target.result;
+      try {
+        const updatedData = {
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          profileImage: imageData,
+          profileComplete: true,
         };
-        reader.readAsDataURL(file);
+
+        const token = localStorage.getItem("token");
+        const response = await axios.put(`${server}/api/user/update-profile`, updatedData, {
+          headers: {
+            token,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.data.success) {
+          setProfileImage(imageData);
+          const updatedUser = { ...user, profileImage: imageData };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          toast.success("Profile photo updated successfully");
+        }
+      } catch (error) {
+        toast.error("Failed to update profile photo");
       }
     };
-    input.click();
+
+    reader.readAsDataURL(file);
   };
 
-  const handleRemoveImage = async (e) => {
-    e.stopPropagation();
+  const handleRemoveImage = async () => {
     try {
       const updatedData = {
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         profileImage: null,
-        profileComplete: true
+        profileComplete: true,
       };
 
       const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${server}/api/user/update-profile`,
-        updatedData,
-        {
-          headers: { 
-            token,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
+      const response = await axios.put(`${server}/api/user/update-profile`, updatedData, {
+        headers: {
+          token,
+          "Content-Type": "application/json",
+        },
+      });
+
       if (response.data.success) {
         setProfileImage(null);
-        const updatedUser = { 
-          ...user, 
-          name: updatedData.name,
-          profileImage: null 
-        };
+        const updatedUser = { ...user, profileImage: null };
         setUser(updatedUser);
-        localStorage.removeItem('profileImage');
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         toast.success("Profile photo removed successfully");
       }
     } catch (error) {
@@ -153,184 +119,167 @@ const ProfileSettings = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting || isLoggingOut) return; // Prevent submission if already submitting or logging out
 
+    setIsSubmitting(true);
     const updatedData = {
       name: `${formData.firstName} ${formData.lastName}`.trim(),
       profileImage: profileImage,
-      profileComplete: true
+      profileComplete: true,
     };
 
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${server}/api/user/update-profile`,
-        updatedData,
-        {
-          headers: {
-            token,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.put(`${server}/api/user/update-profile`, updatedData, {
+        headers: {
+          token,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.data.success) {
-        const updatedUser = { 
-          ...user, 
-          name: updatedData.name,
-          profileImage: profileImage 
-        };
+        const updatedUser = { ...user, name: updatedData.name, profileImage };
         setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         toast.success("Profile updated successfully");
         navigate("/profile");
       }
     } catch (error) {
       toast.error("Failed to update profile");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
-    setIsAuth(false);
-    toast.success("Logout Successfully");
-    navigate("/");
+  const handleLogout = async () => {
+    if (isSubmitting || isLoggingOut) return; // Prevent logout if already submitting or logging out
+    setIsLoggingOut(true);
+    await logoutUser(navigate);
+    setIsLoggingOut(false);
   };
 
-  if (!myCourses) {
+  // For admin users, use the Layout component
+  if (user?.role === "admin") {
     return (
-      <div className="h-screen flex items-center justify-center animate-pulse">
-        Loading...
-      </div>
-    );
-  }
+      <Layout user={user} title="Profile Settings">
+        <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-md mx-auto my-10">
+          <h1 className="text-2xl font-bold text-center mb-6 text-purple-700">Complete Your Profile</h1>
 
-  if (error) {
-    return (
-      <div className="h-screen flex items-center justify-center animate-pulse">
-        Error: {error}
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full flex-grow flex flex-col">
-      <div className="flex flex-grow relative">
-        <div
-          className={`custom-margin w-[16%] ml-8 md:w-[10%] lg:w-[1%] ipad:w-[17%] ipad-landscape:w-[17%] ipad-pro:w-[17%] ipad-pro-landscape:w-[17%] ${
-            isSidebarOpen || isLargeScreen ? "block" : "hidden"
-          }`}
-        >
-          <Sidebar
-            isSidebarOpen={isSidebarOpen || isLargeScreen}
-            setIsSidebarOpen={setIsSidebarOpen}
-            user={user}
-            course={myCourses}
-          />
-        </div>
-        <main
-          className={`flex-grow p-4 animate-fadeIn ${
-            isSidebarOpen || isLargeScreen
-              ? "lg:ml-[17%] ipad:ml-[17%] ipad-landscape:ml-[17%] ipad-pro:ml-[17%] ipad-pro-landscape:ml-[20%]"
-              : ""
-          }`}
-        >
-          <div className="container flex justify-center items-center min-h-screen bg-gray-100 p-4">
-            <div className="card bg-white shadow-md rounded-lg p-8 max-w-lg w-full">
-              <div className="header text-center mb-6">
-                <h1 className="text-2xl font-bold mb-2">Complete Your Profile</h1>
-                <p className="text-gray-500 mb-4">Tell us more about yourself</p>
-              </div>
-              <div className="profile-picture-container flex items-center mb-8">
-                <div className="profile-picture relative w-24 h-24 mr-6">
-                  {profileImage ? (
-                    <img 
-                      src={profileImage} 
-                      alt="Profile" 
-                      className="rounded-full w-full h-full cursor-pointer"
-                      onClick={handleImageClick} // Here's where handleImageClick is used
-                    />
-                  ) : (
-                    <div 
-                      className="profile-initials rounded-full w-full h-full flex items-center justify-center bg-blue-500 text-white text-2xl cursor-pointer"
-                      onClick={handleImageClick} // Here's where handleImageClick is used
-                    >
-                      {getInitials(formData.firstName, formData.lastName)}
-                    </div>
-                  )}
-                  {profileImage && (
-                    <button
-                      className="delete-image-btn absolute bottom-1 right-1 bg-red-500 text-white border-none rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out hover:bg-red-800 hover:scale-110 shadow-sm"
-                      onClick={handleRemoveImage}
-                    >
-                      <FaTrash className="w-4 h-4" />
-                    </button>
-                  )}
+          {/* Profile Image Section */}
+          <div className="flex flex-col items-center mb-6 p-4">
+            <label htmlFor="profileImage" className="relative w-24 h-24 cursor-pointer">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="rounded-full w-full h-full object-cover" />
+              ) : (
+                <div className="flex items-center justify-center rounded-full w-full h-full bg-indigo-500 text-white text-2xl">
+                  {(formData.firstName.charAt(0) || "").toUpperCase()}
+                  {(formData.lastName.charAt(0) || "").toUpperCase()}
                 </div>
-                <span className="Profile-picture-text text-left text-sm text-gray-600">
-                  Profile Photo
-                  <span className="block text-xs text-gray-400">Click to update your profile picture</span>
-                </span>
-              </div>
-              <form className="form grid gap-4" onSubmit={handleSubmit}>
-                <div className="spacing mb-6">
-                  <label className="text-sm text-gray-600">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="Enter your first name"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800 focus:outline-none focus:border-blue-500 focus:bg-white"
-                  />
-                </div>
-                <div className="spacing mb-6">
-                  <label className="text-sm text-gray-600">Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder="Enter your last name"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800 focus:outline-none focus:border-blue-500 focus:bg-white"
-                  />
-                </div>
-                <div className="full-width">
-                  <label className="text-sm text-gray-600">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800  focus:outline-none"
-                  />
-                </div>
-                <div className="button-container flex justify-center gap-5">
-                  <button type="submit" className="button bg-indigo-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer transition-colors duration-300 hover:bg-indigo-700">
-                    Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="button bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm cursor-pointer transition-colors duration-300 hover:bg-gray-300"
-                  >
-                    <IoMdLogOut /> Logout
-                  </button>
-                </div>
-              </form>
-            </div>
+              )}
+              <input type="file" id="profileImage" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </label>
+            {profileImage && (
+              <button onClick={handleRemoveImage} className="text-red-500 text-sm mt-2 flex items-center">
+                <FaTrash className="mr-2" /> Remove Photo
+              </button>
+            )}
           </div>
-        </main>
-      </div>
+
+          {/* Form Section */}
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" placeholder="First Name" />
+            <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" placeholder="Last Name" />
+            <input type="email" value={formData.email} readOnly className="w-full px-4 py-2 border rounded-md bg-gray-100 cursor-not-allowed" />
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+              <button type="submit" disabled={isSubmitting || isLoggingOut} className={`px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md ${isSubmitting || isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}`}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </button>
+             
+
+<button 
+            onClick={handleLogout} 
+            disabled={isSubmitting || isLoggingOut} 
+            className={`px-3 py-2 sm:px-4 sm:py-2 md:px-5 md:py-3 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center text-sm sm:text-base ${
+              isSubmitting || isLoggingOut ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            <IoMdLogOut className="mr-1 sm:mr-2" /> 
+            {isLoggingOut ? "Logging out..." : "Logout"}
+          </button>
+            </div>
+          </form>
+        </div>
+      </Layout>
+    );
+  }
+
+  // For user and instructor roles
+  return (
+    <div className="flex bg-gray-100 min-h-screen">
+      {/* Sidebar for user and instructor - using the original sidebar's responsive behavior */}
+      {user?.role === "user" && <UserSidebar user={user} course={myCourses} />}
+      {user?.role === "instructor" && <InstructorSidebar user={user} />}
+
+      {/* Main content */}
+      <main className="flex-grow flex justify-center items-center p-4 md:p-10">
+        <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold text-center mb-6 text-purple-700">Complete Your Profile</h1>
+
+          {/* Profile Image Section */}
+          <div className="flex flex-col items-center mb-6 p-4">
+            <label htmlFor="profileImage" className="relative w-24 h-24 cursor-pointer">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="rounded-full w-full h-full object-cover" />
+              ) : (
+                <div className="flex items-center justify-center rounded-full w-full h-full bg-indigo-500 text-white text-2xl">
+                  {(formData.firstName.charAt(0) || "").toUpperCase()}
+                  {(formData.lastName.charAt(0) || "").toUpperCase()}
+                </div>
+              )}
+              <input type="file" id="profileImage" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </label>
+            {profileImage && (
+              <button onClick={handleRemoveImage} className="text-red-500 text-sm mt-2 flex items-center">
+                <FaTrash className="mr-2" /> Remove Photo
+              </button>
+            )}
+          </div>
+
+          {/* Form Section */}
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" placeholder="First Name" />
+            <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" placeholder="Last Name" />
+            <input type="email" value={formData.email} readOnly className="w-full px-4 py-2 border rounded-md bg-gray-100 cursor-not-allowed" />
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+              <button type="submit" disabled={isSubmitting || isLoggingOut} className={`px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md ${isSubmitting || isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}`}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </button>
+             
+
+              <button 
+            onClick={handleLogout} 
+            disabled={isSubmitting || isLoggingOut} 
+            className={`px-3 py-2 sm:px-4 sm:py-2 md:px-5 md:py-3 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center text-sm sm:text-base ${
+              isSubmitting || isLoggingOut ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            <IoMdLogOut className="mr-1 sm:mr-2" /> 
+            {isLoggingOut ? "Logging out..." : "Logout"}
+          </button>
+            </div>
+          </form>
+        </div>
+      </main>
     </div>
   );
 };

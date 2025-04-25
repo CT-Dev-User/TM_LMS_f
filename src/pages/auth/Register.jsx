@@ -9,30 +9,34 @@ const Register = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(""); // New state for error message
+    const [error, setError] = useState("");
 
     const submitHandler = async (e) => {
         e.preventDefault();
-        setError(""); // Clear any previous errors
+        setError("");
         try {
-            // Assuming registerUser returns a promise that resolves to the user's data
             const user = await registerUser(name, email, password, navigate);
             if (user) {
-                // Registration successful, redirect to user profile or dashboard
                 navigate('/dashboard');
             }
         } catch (err) {
-            // Handle any error from registerUser function
             setError(err.message || "Registration failed. Please try again.");
         }
     };
 
     return (
-        <div className="min-h-screen flex flex-col sm:flex-row items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="px-24 mb-8 sm:mb-0 sm:mr-8">
-                <img src={image} alt="img" className='w-1000px sm:w-80' />
+        <div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+            {/* Image Container - Responsive adjustments */}
+            <div className="w-full lg:w-1/2 flex justify-center mb-8 lg:mb-0 lg:mr-8 px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-24">
+                <img 
+                    src={image} 
+                    alt="Registration illustration" 
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl object-contain"
+                />
             </div>
-            <div className="max-w-md w-full p-8 space-y-8 bg-white rounded-lg shadow-lg">
+            
+            {/* Form Container */}
+            <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg">
                 <h2 className="text-3xl font-bold text-center text-purple-700">
                     Register
                 </h2>
