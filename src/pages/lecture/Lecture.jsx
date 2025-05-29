@@ -23,16 +23,23 @@ const Lecture = ({ user }) => {
     const [videoPreview, setVideoPreview] = useState('');
     const [btnLoading, setBtnLoading] = useState(false);
     const [courseMeetings, setCourseMeetings] = useState([]);
+    // States for instructor assignment
+    const [instructors, setInstructors] = useState([]);
+    const [selectedInstructor, setSelectedInstructor] = useState('');
+    const [currentInstructor, setCurrentInstructor] = useState(null);
+    const [assignLoading, setAssignLoading] = useState(false);
 
     const params = useParams();
     const navigate = useNavigate();
 
+    // Redirect non-subscribed users or non-admins
     useEffect(() => {
         if (user && user.role !== 'admin' && !user.subscription.includes(params.id)) {
             navigate('/');
         }
     }, [user, params.id, navigate]);
 
+    // Fetch all lectures for the course
     const fetchLectures = async () => {
         try {
             const { data } = await axios.get(`${server}/api/lectures/${params.id}`, {
@@ -48,6 +55,7 @@ const Lecture = ({ user }) => {
         }
     };
 
+    // Fetch course meetings
     const fetchCourseMeetings = async () => {
         try {
             const { data } = await axios.get(`${server}/api/course/${params.id}/meetings`, {
@@ -60,6 +68,7 @@ const Lecture = ({ user }) => {
         }
     };
 
+    // Fetch a specific lecture
     const fetchLecture = async (id) => {
         setLecLoading(true);
         try {
@@ -74,6 +83,63 @@ const Lecture = ({ user }) => {
             setLecLoading(false);
         }
     };
+
+    // Fetch all instructors (admin only)
+    const fetchInstructors = async () => {
+        try {
+            const { data } = await axios.get(`${server}/api/users`, {
+                headers: { token: localStorage.getItem('token') },
+            });
+            const instructorList = data.users.filter((u) => u.role === 'instructor');
+            setInstructors(instructorList);
+        } catch (error) {
+            console.error('Failed to fetch instructors:', error);
+            toast.error('Error fetching instructors.');
+        }
+    };
+
+    // Fetch current course assignment (admin only)
+const fetchCourseAssignment = async () => {
+    try {
+        const { data } = await axios.get(`${server}/api/course/${params.id}`, {
+            headers: { token: localStorage.getItem('token') },
+        });
+
+        const instructorId = data.course.assignedTo;
+        setSelectedInstructor(instructorId || '');
+
+        if (!instructorId) {
+            setCurrentInstructor(null);
+        } else {
+            // Only look up instructor if we have a list loaded
+            const instructor = instructors.find((inst) => inst._id === instructorId);
+            setCurrentInstructor(instructor || { name: 'Unknown', email: 'N/A' });
+        }
+    } catch (error) {
+        console.error('Failed to fetch course assignment:', error);
+        toast.error('Error fetching course assignment.');
+    }
+};
+
+
+    // Handle instructor assignment/de-assignment (admin only)
+   const handleAssignInstructor = async () => {
+    setAssignLoading(true);
+    try {
+        const { data } = await axios.put(
+            `${server}/api/course/${params.id}/assign`,
+            { instructorId: selectedInstructor || null },
+            { headers: { token: localStorage.getItem('token') } }
+        );
+        toast.success(data.message);
+        fetchCourseAssignment(); // Refresh display
+    } catch (error) {
+        console.error('Error assigning instructor:', error);
+        toast.error(error.response?.data?.message || 'Error assigning instructor.');
+    } finally {
+        setAssignLoading(false);
+    }
+};
 
     const handleVideoChange = (e) => {
         const file = e.target.files[0];
@@ -104,7 +170,7 @@ const Lecture = ({ user }) => {
             fetchLectures();
             resetLectureForm();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'An error occurred while adding the lecture.');
+            toast.error(error.response?.data?.message || 'Error adding lecture.');
         } finally {
             setBtnLoading(false);
         }
@@ -119,7 +185,7 @@ const Lecture = ({ user }) => {
                 toast.success(data.message);
                 fetchLectures();
             } catch (error) {
-                toast.error(error.response?.data?.message || 'An error occurred while deleting the lecture.');
+                toast.error(error.response?.data?.message || 'Error deleting lecture.');
             }
         }
     };
@@ -137,7 +203,7 @@ const Lecture = ({ user }) => {
             resetMeetingForm();
             fetchCourseMeetings();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'An error occurred while creating the meeting.');
+            toast.error(error.response?.data?.message || 'Error creating meeting.');
         }
     };
 
@@ -150,7 +216,7 @@ const Lecture = ({ user }) => {
                 toast.success(data.message);
                 fetchCourseMeetings();
             } catch (error) {
-                toast.error(error.response?.data?.message || 'An error occurred while deleting the meeting.');
+                toast.error(error.response?.data?.message || 'Error deleting meeting.');
             }
         }
     };
@@ -169,9 +235,14 @@ const Lecture = ({ user }) => {
         setPlatform('');
     };
 
+    // Initial data fetch
     useEffect(() => {
         fetchLectures();
-    }, []);
+        if (user && user.role === 'admin') {
+            fetchInstructors();
+            fetchCourseAssignment();
+        }
+    }, [user]);
 
     const convertTo12Hour = (time24) => {
         const [hours, minutes] = time24.split(':');
@@ -202,7 +273,7 @@ const Lecture = ({ user }) => {
                                 {lecture.video ? (
                                     <div className="mb-6">
                                         <video
-                                            src={lecture.video} // Use Cloudinary URL directly
+                                            src={lecture.video}
                                             className="w-full rounded-md mb-4"
                                             controls
                                         />
@@ -220,6 +291,40 @@ const Lecture = ({ user }) => {
                     <div className="w-full md:w-1/3 space-y-6">
                         {user && user.role === 'admin' && (
                             <>
+                                {/* Instructor Assignment Section */}
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-xl font-semibold mb-4">Assign Instructor</h3>
+                                    <div className="flex flex-col space-y-4">
+                                        <select
+                                            value={selectedInstructor}
+                                            onChange={(e) => setSelectedInstructor(e.target.value)}
+                                            className="w-full p-3 border rounded-md shadow-sm"
+                                        >
+                                            <option value="">Select an Instructor</option>
+                                            {instructors.map((instructor) => (
+                                                <option key={instructor._id} value={instructor._id}>
+                                                    {instructor.name} ({instructor.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={handleAssignInstructor}
+                                            disabled={assignLoading}
+                                            className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+                                        >
+                                            {assignLoading ? 'Assigning...' : currentInstructor ? 'Update Assignment' : 'Assign Instructor'}
+                                        </button>
+                                       
+                                       
+                                        <p className="text-gray-600">
+                                            {currentInstructor
+                                                ? ` `
+                                                : 'No instructor assigned'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Add Lecture Button */}
                                 <div className="flex justify-between items-center">
                                     <button
                                         onClick={() => setShowAddLectureForm(!showAddLectureForm)}
@@ -229,6 +334,7 @@ const Lecture = ({ user }) => {
                                     </button>
                                 </div>
 
+                                {/* Add Lecture Form */}
                                 {showAddLectureForm && (
                                     <div className="bg-white p-6 rounded-lg shadow-md">
                                         <h3 className="text-2xl font-semibold mb-4">Add New Lecture</h3>
@@ -251,7 +357,7 @@ const Lecture = ({ user }) => {
                                             />
                                             <input
                                                 type="file"
-                                                accept="video/*" // Restrict to video files
+                                                accept="video/*"
                                                 onChange={handleVideoChange}
                                                 className="w-full mb-4"
                                                 required
@@ -270,12 +376,15 @@ const Lecture = ({ user }) => {
                                     </div>
                                 )}
 
+                                {/* Add Meeting Button */}
                                 <button
                                     onClick={() => setMeetingFormVisible(!meetingFormVisible)}
                                     className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
                                 >
                                     {meetingFormVisible ? 'Close Meeting Form' : 'Add Meeting'}
                                 </button>
+
+                                {/* Add Meeting Form */}
                                 {meetingFormVisible && (
                                     <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full mx-auto">
                                         <h3 className="text-2xl font-semibold mb-4">Create Meeting</h3>
@@ -331,6 +440,7 @@ const Lecture = ({ user }) => {
                                     </div>
                                 )}
 
+                                {/* Lectures List */}
                                 <div>
                                     <h3 className="text-xl font-semibold mb-4">Lectures</h3>
                                     {lectures.length ? (
@@ -357,6 +467,7 @@ const Lecture = ({ user }) => {
                                     )}
                                 </div>
 
+                                {/* Meetings List */}
                                 <div>
                                     <h3 className="text-xl font-semibold mb-4">Meetings</h3>
                                     {courseMeetings.length ? (
@@ -390,14 +501,11 @@ const Lecture = ({ user }) => {
                             </>
                         )}
                     </div>
-
-                    
                 </div>
             )}
-            {/* Course Questions Section - Available to both instructors and admins */}
+            {/* Course Questions Section */}
             {user && (user.role === 'admin' || user.role === 'instructor') && (
-                <div className="mt-8  p-6">
-                    {/* <h2 className="text-2xl font-semibold mb-4"></h2> */}
+                <div className="mt-8 p-6">
                     <AnswerForm courseId={params.id} />
                 </div>
             )}

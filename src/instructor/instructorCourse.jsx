@@ -5,35 +5,31 @@ import { useNavigate } from "react-router-dom";
 import { UserData } from "../context/UserContext";
 import { CourseData } from "../context/CourseContext";
 import Sidebar from "./Sidebar";
-import { server } from "../main";
 
 const InstructorCourses = ({ user }) => {
   const navigate = useNavigate();
   const { isAuth } = UserData();
   const { courses, fetchCourses } = CourseData();
 
-  // Redirect if user is not authenticated or not an instructor/admin
-  if (!isAuth || (user && user.role !== "instructor")) {
-    return navigate("/login");
-  }
-
+  // Redirect if unauthenticated or not instructor
   useEffect(() => {
-    fetchCourses(); // Fetch courses on mount
-  }, []);
-
-// Inside InstructorCourses component
-const InstructorCourseCard = ({ course }) => {
-  const handleStudyClick = () => {
-    navigate(`/instructor/course/${course._id}/manage`); // Changed navigation path
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      navigate(`/instructor/course/${course._id}/manage`);
+    if (!isAuth || (user && user.role !== "instructor")) {
+      navigate("/login");
+    } else {
+      fetchCourses(); // Fetch only assigned courses from backend
     }
-  };
+  }, [isAuth, user]);
 
-  // Rest of the component remains the same...
+  const InstructorCourseCard = ({ course }) => {
+    const handleStudyClick = () => {
+      navigate(`/instructor/course/${course._id}/manage`);
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") {
+        handleStudyClick();
+      }
+    };
 
     return (
       <div
@@ -43,7 +39,7 @@ const InstructorCourseCard = ({ course }) => {
         role="button"
         aria-label={`Open course ${course.title}`}
       >
-        {/* Course Thumbnail */}
+        {/* Thumbnail */}
         <div className="relative h-56 overflow-hidden">
           <img
             src={course.image}
@@ -56,14 +52,11 @@ const InstructorCourseCard = ({ course }) => {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 opacity-70"></div>
         </div>
 
-        {/* Course Details */}
+        {/* Details */}
         <div className="p-6">
-          {/* Course Title */}
           <h3 className="text-xl font-bold text-gray-900 mb-3 truncate capitalize">
             {course.title || "Untitled Course"}
           </h3>
-
-          {/* Course Metadata */}
           <div className="space-y-2 mb-4">
             <p className="text-sm text-gray-600">
               <span className="font-semibold text-gray-800 capitalize">Instructor:</span> {course.createdBy || "N/A"}
@@ -75,16 +68,12 @@ const InstructorCourseCard = ({ course }) => {
               <span className="font-semibold text-gray-800">Duration:</span> {course.duration || "N/A"} Weeks
             </p>
           </div>
-
-          {/* Action Button */}
-          <div className="space-y-3">
-            <button
-              onClick={handleStudyClick}
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:from-purple-600 hover:to-blue-700 transform hover:scale-105"
-            >
-              Teach
-            </button>
-          </div>
+          <button
+            onClick={handleStudyClick}
+            className="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:from-purple-600 hover:to-blue-700 transform hover:scale-105"
+          >
+            Teach
+          </button>
         </div>
       </div>
     );
@@ -93,18 +82,18 @@ const InstructorCourseCard = ({ course }) => {
   return (
     <div className="flex h-screen bg-gradient-to-r from-indigo-50 to-blue-100">
       <Sidebar />
-      
-      <main className="flex-1 overflow-y-auto  p-6 lg:ml-64">
+      <main className="flex-1 overflow-y-auto p-6 lg:ml-64">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-4 text-indigo-800">All Courses</h1>
-          
+          <h1 className="text-2xl font-semibold mb-4 text-indigo-800">Assigned Courses</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ipadpro:grid-cols-2 gap-6">
             {courses && courses.length > 0 ? (
-              courses.map((course) => (
-                <InstructorCourseCard key={course._id} course={course} />
-              ))
+              courses
+                .filter(course => course.assignedTo === user._id) // Filter for only assigned courses
+                .map(course => (
+                  <InstructorCourseCard key={course._id} course={course} />
+                ))
             ) : (
-              <p className="text-center text-gray-600 col-span-full">No Courses Available Yet</p>
+              <p className="text-center text-gray-600 col-span-full">No Courses Assigned Yet</p>
             )}
           </div>
         </div>

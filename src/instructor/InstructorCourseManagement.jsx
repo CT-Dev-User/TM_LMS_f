@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { server } from "../main";
 import CourseQuestions from "./AnswerForm.jsx";
+import InsLectures from "./InsLectures.jsx"; // Import the new component
 import Sidebar from "./Sidebar";
 
 const InstructorCourseManagement = ({ user }) => {
@@ -12,6 +13,7 @@ const InstructorCourseManagement = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [showLectures, setShowLectures] = useState(false); // New state for toggling lectures
   const [assignmentData, setAssignmentData] = useState({
     title: "",
     description: "",
@@ -30,6 +32,7 @@ const InstructorCourseManagement = ({ user }) => {
   const params = useParams();
   const navigate = useNavigate();
 
+  // Redirect if user is not authenticated or not an instructor/admin
   if (!user || (user.role !== "instructor" && user.role !== "admin")) {
     navigate("/login");
     return null;
@@ -68,7 +71,6 @@ const InstructorCourseManagement = ({ user }) => {
           );
           submissionsData[assignment._id] = subData;
         } catch (subError) {
-          
           submissionsData[assignment._id] = { submissions: [] };
         }
       }
@@ -128,7 +130,6 @@ const InstructorCourseManagement = ({ user }) => {
         maxMarks: 1,
       });
     } catch (error) {
-      
       toast.error(
         error.response?.data?.message || "Error creating assignment."
       );
@@ -153,7 +154,6 @@ const InstructorCourseManagement = ({ user }) => {
       delete updatedSubmissions[assignmentId];
       setSubmissions(updatedSubmissions);
     } catch (error) {
-      
       toast.error(
         error.response?.data?.message || "Error deleting assignment."
       );
@@ -179,7 +179,6 @@ const InstructorCourseManagement = ({ user }) => {
       }));
       setEditingMarks((prev) => ({ ...prev, [submissionId]: false }));
     } catch (error) {
-      
       toast.error(error.response?.data?.message || "Error updating marks.");
     }
   };
@@ -256,7 +255,7 @@ const InstructorCourseManagement = ({ user }) => {
   return (
     <div className="flex h-screen bg-gradient-to-r from-indigo-50 to-blue-100">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto scrollbar-hidden p-6  lg:ml-64 animate-fadeIn">
+      <main className="flex-1 overflow-y-auto scrollbar-hidden p-6 lg:ml-64 animate-fadeIn">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
@@ -270,13 +269,24 @@ const InstructorCourseManagement = ({ user }) => {
               <h1 className="text-2xl font-semibold text-indigo-800">
                 Course Management
               </h1>
-              <button
-                onClick={() => setShowAssignmentForm(!showAssignmentForm)}
-                className="mt-4 sm:mt-0 bg-gradient-to-r from-purple-500 to-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-              >
-                {showAssignmentForm ? "Cancel" : "Create Assignment"}
-              </button>
+              <div className="flex space-x-4 mt-4 sm:mt-0">
+                <button
+                  onClick={() => setShowAssignmentForm(!showAssignmentForm)}
+                  className="bg-gradient-to-r from-purple-500 to-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  {showAssignmentForm ? "Cancel" : "Create Assignment"}
+                </button>
+                <button
+                  onClick={() => setShowLectures(!showLectures)}
+                  className="bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  {showLectures ? "Hide Lectures" : "View Lectures"}
+                </button>
+              </div>
             </div>
+
+            {/* Lectures Section */}
+            {showLectures && <InsLectures courseId={params.id} />}
 
             {/* Assignment Form */}
             {showAssignmentForm && (
@@ -674,7 +684,6 @@ const InstructorCourseManagement = ({ user }) => {
                                     </p>
                                     <ul className="list-disc pl-5 text-gray-600">
                                       {submission.answers.map((ans, i) => {
-                                        // Use index 'i' to get the corresponding question
                                         const question =
                                           assignment?.questions[i];
                                         return (
@@ -795,7 +804,6 @@ const InstructorCourseManagement = ({ user }) => {
               )}
             </div>
             <CourseQuestions courseId={params.id} />
-
           </div>
         )}
       </main>
