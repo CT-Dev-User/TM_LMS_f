@@ -1,269 +1,200 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { server } from "../main";
 import { UserData } from "../context/UserContext";
 import Sidebar from "./Sidebar";
+import toast from "react-hot-toast";
 
 const Students = ({ user }) => {
   const navigate = useNavigate();
   const { isAuth } = UserData();
-  const params = useParams(); // Get course ID from URL params
 
   // Redirect if user is not authenticated or not an instructor
   if (!isAuth || (user && user.role !== "instructor")) {
-    return navigate("/login");
+    navigate("/login");
+    return null;
   }
 
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [studentSubmissions, setStudentSubmissions] = useState({});
+  const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch all students
-  async function fetchStudents() {
+  // Fetch all courses assigned to the instructor
+  async function fetchInstructorCourses() {
     try {
-      const { data } = await axios.get(`${server}/api/users`, {
-        headers: {
-          token: localStorage.getItem("token"),
-        },
-      });
-      const nonAdminUsers = data.users.filter(
-        (u) => !["admin", "instructor"].includes(u.role)
-      );
-      setStudents(nonAdminUsers);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-    }
-  }
-
-  // Fetch assignments for the course
-  async function fetchAssignments() {
-    try {
-      const { data } = await axios.get(`${server}/api/course/${params.id}/assignments`, {
+      const { data } = await axios.get(`${server}/api/instructor/courses`, {
         headers: { token: localStorage.getItem("token") },
       });
-      setAssignments(data.assignments);
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch courses");
+      }
+      setCourses(data.courses || []);
+      return data.courses || [];
     } catch (error) {
-      console.error("Error fetching assignments:", error);
+      console.error("Error fetching instructor courses:", error);
+      toast.error("Error fetching courses: " + (error.response?.data?.message || error.message));
+      return [];
     }
   }
 
-  // Fetch submissions for a specific student
-  async function fetchStudentSubmissions(studentId) {
-    setLoadingSubmissions(true);
+  // Fetch enrolled students for all courses
+  async function fetchStudents() {
     try {
-      const submissionsData = {};
-      for (const assignment of assignments) {
+      const courses = await fetchInstructorCourses();
+      if (courses.length === 0) {
+        setStudents([]);
+        return;
+      }
+      const studentMap = new Map(); // To deduplicate students
+      for (const course of courses) {
         try {
-          const { data: subData } = await axios.get(
-            `${server}/api/assignment/${assignment._id}/submissions`,
-            { headers: { token: localStorage.getItem("token") } }
+          const { data } = await axios.get(
+            `${server}/api/course/${course._id}/students`,
+            {
+              headers: { token: localStorage.getItem("token") },
+            }
           );
-          const studentSubs = subData.submissions.filter(
-            (sub) => sub.studentId === studentId
-          );
-          if (studentSubs.length > 0) {
-            submissionsData[assignment._id] = {
-              assignmentTitle: assignment.title,
-              submissions: studentSubs,
-            };
+          if (data.success && data.students) {
+            data.students.forEach((student) => {
+              if (!studentMap.has(student._id)) {
+                studentMap.set(student._id, {
+                  ...student,
+                  courses: [course.title],
+                });
+              } else {
+                studentMap.get(student._id).courses.push(course.title);
+              }
+            });
           }
-        } catch (subError) {
-          console.error(`Error fetching submissions for assignment ${assignment._id}:`, subError);
+        } catch (error) {
+          console.error(`Error fetching students for course ${course._id}:`, error);
+          toast.error(`Failed to fetch students for course ${course.title}`);
         }
       }
-      setStudentSubmissions(submissionsData);
+      setStudents(Array.from(studentMap.values()));
     } catch (error) {
-      console.error("Error fetching student submissions:", error);
-    } finally {
-      setLoadingSubmissions(false);
+      console.error("Error fetching students:", error);
+      toast.error("Error fetching students.");
     }
   }
 
-  // Handle clicking a student's name
-  const handleStudentClick = (student) => {
-    if (selectedStudent && selectedStudent._id === student._id) {
-      setSelectedStudent(null); // Hide submissions if clicked again
-      setStudentSubmissions({});
-    } else {
-      setSelectedStudent(student);
-      fetchStudentSubmissions(student._id);
+  // Fetch assignments for all courses
+  async function fetchAssignments() {
+    try {
+      const allAssignments = [];
+      for (const course of courses) {
+        try {
+          const { data } = await axios.get(
+            `${server}/api/course/${course._id}/assignments`,
+            {
+              headers: { token: localStorage.getItem("token") },
+            }
+          );
+          if (data.success) {
+            allAssignments.push(...(data.assignments || []));
+          }
+        } catch (error) {
+          console.error(`Error fetching assignments for course ${course._id}:`, error);
+        }
+      }
+      setAssignments(allAssignments);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      toast.error("Error fetching assignments.");
     }
-  };
+  }
 
   useEffect(() => {
-    fetchStudents();
-    fetchAssignments();
+    const fetchData = async () => {
+      setLoading(true);
+      await fetchStudents();
+      await fetchAssignments();
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
   return (
     <div className="flex h-screen bg-gradient-to-r from-indigo-50 to-blue-100">
       <Sidebar />
-      <main className="flex-1 overflow-x-hidden overflow-y-auto py-12 px-4 sm:px-6 lg:px-8  lg:ml-[17%] xl:ml-[20%] ipadpro:ml-[24%] ipadpro-landscape:ml-[20%]">
-        <div className="max-w-7xl mx-auto animate-fadeIn">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-indigo-800">
-            Your Students
-          </h1>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr className="hidden sm:table-row">
-                  <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    #
-                  </th>
-                  <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {students.length > 0 ? (
-                  students.map((student, index) => (
-                    <React.Fragment key={student._id}>
-                      {/* Mobile View (Stacked) */}
-                      <tr className="sm:hidden">
-                        <td
-                          colSpan="4"
-                          className="px-2 py-2 border-b border-gray-200"
-                        >
-                          <div
-                            className="text-sm text-indigo-600 font-semibold cursor-pointer hover:underline"
-                            onClick={() => handleStudentClick(student)}
-                          >
-                            {student.name}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {student.email}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Role: {student.role}
-                          </div>
-                        </td>
-                      </tr>
-                      {/* Tablet/Desktop View (Table) */}
-                      <tr className="hidden sm:table-row hover:bg-gray-50 transition-colors">
-                        <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-sm text-gray-900">
-                          {index + 1}
-                        </td>
-                        <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-sm text-gray-500">
-                          <span
-                            className="text-indigo-600 cursor-pointer hover:underline"
-                            onClick={() => handleStudentClick(student)}
-                          >
-                            {student.name}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-sm text-gray-500">
-                          {student.email}
-                        </td>
-                        <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-sm text-gray-500">
-                          {student.role}
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan="4"
-                      className="px-2 py-2 sm:px-4 sm:py-3 text-center text-sm text-gray-600"
-                    >
-                      No students available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      <main className="flex-1 overflow-y-auto scrollbar-hidden p-6 lg:ml-64 animate-fadeIn">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
           </div>
+        ) : (
+          <div className="max-w-5xl mx-auto space-y-8">
+            <h1 className="text-2xl font-semibold text-indigo-800">
+              Your Students
+            </h1>
 
-          {/* Submissions Section */}
-          {selectedStudent && (
-            <div className="mt-8 bg-white rounded-2xl shadow-lg p-6 animate-slideUp">
+            {/* Students Section */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
-                Submissions for {selectedStudent.name}
+                All Enrolled Students ({students.length})
               </h2>
-              {loadingSubmissions ? (
-                <div className="flex justify-center items-center h-32">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-                </div>
-              ) : Object.keys(studentSubmissions).length > 0 ? (
-                <div className="space-y-6">
-                  {Object.keys(studentSubmissions).map((assignmentId) => {
-                    const assignment = assignments.find((a) => a._id === assignmentId);
-                    const subData = studentSubmissions[assignmentId];
-                    const totalMaxMarks = assignment?.questions.reduce(
-                      (sum, q) => sum + (q.maxMarks || 1),
-                      0
-                    ) || 0;
-
-                    return (
-                      <div
-                        key={assignmentId}
-                        className="bg-gray-50 p-4 rounded-lg shadow-md"
-                      >
-                        <h3 className="text-lg font-semibold text-indigo-600">
-                          {subData.assignmentTitle || "Untitled Assignment"}
-                        </h3>
-                        <div className="space-y-2">
-                          {subData.submissions.map((submission) => (
-                            <div
-                              key={submission._id}
-                              className="bg-white p-3 rounded-md border border-gray-200"
-                            >
-                              <p className="text-sm">
-                                <span className="font-semibold text-gray-700">Submitted At:</span>{" "}
-                                {new Date(submission.submittedAt).toLocaleString()}
-                              </p>
-                              <div className="text-sm">
-                                <p className="font-semibold text-gray-700">Answers:</p>
-                                <ul className="list-disc pl-5 text-gray-600">
-                                  {submission.answers.map((ans, i) => {
-                                    const question = assignment?.questions[i];
-                                    return (
-                                      <li key={i}>
-                                        <span className="font-semibold">
-                                          [ {question ? question.type : "Unknown"} ]{" "}
-                                          {question ? question.questionText : "Question not found"}:
-                                        </span>{" "}
-                                        {ans.answer || "No answer"}
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </div>
-                              <p className="text-sm mt-2">
-                                <span className="font-semibold text-gray-700">Marks:</span>{" "}
-                                {submission.marks !== null
-                                  ? `${submission.marks}/${totalMaxMarks} (${Math.round(
-                                      (submission.marks / totalMaxMarks) * 100
-                                    )}%)`
-                                  : "Not graded"}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
+              {students.length > 0 ? (
+                <div className="space-y-4">
+                  {students.map((student, index) => (
+                    <div
+                      key={student._id}
+                      className="flex items-center justify-between space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-indigo-600">{student.name}</p>
+                        <p className="text-sm text-gray-500">{student.email}</p>
+                        <p className="text-xs text-gray-400">
+                          Enrolled in: {student.courses.join(", ") || "No courses"}
+                        </p>
                       </div>
-                    );
-                  })}
+                      <span className="text-xs text-gray-500">#{index + 1}</span>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-gray-600 text-lg text-center py-4">
-                  No submissions found for this student.
+                  No students enrolled in your courses yet.
                 </p>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-in-out;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.6s ease-in-out;
+        }
+      `}</style>
     </div>
   );
 };

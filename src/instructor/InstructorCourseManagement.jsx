@@ -4,16 +4,18 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { server } from "../main";
 import CourseQuestions from "./AnswerForm.jsx";
-import InsLectures from "./InsLectures.jsx"; // Import the new component
+import InsLectures from "./InsLectures.jsx";
 import Sidebar from "./Sidebar";
 
 const InstructorCourseManagement = ({ user }) => {
   const [courseMeetings, setCourseMeetings] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [enrolledStudents, setEnrolledStudents] = useState([]); // State for enrolled students
+  const [showStudents, setShowStudents] = useState(false); // State to toggle student list
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [showLectures, setShowLectures] = useState(false); // New state for toggling lectures
+  const [showLectures, setShowLectures] = useState(false);
   const [assignmentData, setAssignmentData] = useState({
     title: "",
     description: "",
@@ -78,9 +80,29 @@ const InstructorCourseManagement = ({ user }) => {
     } catch (error) {
       toast.error("Error fetching assignments.");
       setError("Failed to fetch assignments.");
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const fetchEnrolledStudents = async () => {
+    try {
+      const { data } = await axios.get(
+        `${server}/api/course/${params.id}/students`,
+        {
+          headers: { token: localStorage.getItem("token") },
+        }
+      );
+      setEnrolledStudents(data.students);
+    } catch (error) {
+      toast.error("Error fetching enrolled students.");
+      console.error("Error fetching enrolled students:", error);
+    }
+  };
+
+  const handleToggleStudents = () => {
+    if (!showStudents) {
+      fetchEnrolledStudents(); // Fetch students when showing the list
+    }
+    setShowStudents(!showStudents);
   };
 
   const createAssignment = async (e) => {
@@ -248,9 +270,20 @@ const InstructorCourseManagement = ({ user }) => {
   };
 
   useEffect(() => {
-    fetchCourseMeetings();
-    fetchAssignments();
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchCourseMeetings().catch((error) => {
+          console.error("Error fetching meetings:", error);
+        }),
+        fetchAssignments().catch((error) => {
+          console.error("Error fetching assignments:", error);
+        }),
+      ]);
+      setLoading(false);
+    };
+    fetchData();
+  }, [params.id]);
 
   return (
     <div className="flex h-screen bg-gradient-to-r from-indigo-50 to-blue-100">
@@ -282,11 +315,49 @@ const InstructorCourseManagement = ({ user }) => {
                 >
                   {showLectures ? "Hide Lectures" : "View Lectures"}
                 </button>
+                <button
+                  onClick={handleToggleStudents}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  {showStudents ? "Hide Students" : "View Enrolled Students"}
+                </button>
               </div>
             </div>
 
             {/* Lectures Section */}
             {showLectures && <InsLectures courseId={params.id} />}
+
+            {/* Enrolled Students Section */}
+            {showStudents && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  Enrolled Students ({enrolledStudents.length})
+                </h2>
+                {enrolledStudents.length > 0 ? (
+                  <div className="space-y-4">
+                    {enrolledStudents.map((student) => (
+                      <div
+                        key={student._id}
+                        className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {student.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {student.email}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-600 text-lg text-center py-4">
+                    No students enrolled yet
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Assignment Form */}
             {showAssignmentForm && (
@@ -734,7 +805,7 @@ const InstructorCourseManagement = ({ user }) => {
                                                 submissions: prev[
                                                   assignmentId
                                                 ].submissions.map((sub) =>
-                                                  sub._id === submission._id
+                                                  (sub._id === submission._id)
                                                     ? {
                                                         ...sub,
                                                         marks:
@@ -742,12 +813,12 @@ const InstructorCourseManagement = ({ user }) => {
                                                             e.target.value
                                                           ) || 0,
                                                       }
-                                                    : sub
+                                                  : sub
                                                 ),
                                               },
                                             }))
                                           }
-                                          className="w-20 border-gray-300 rounded-md shadow-sm p-1"
+                                          className="w-20 border-gray-300 rounded-md shadow-sm rounded-lg"
                                         />
                                         <button
                                           onClick={() =>
