@@ -7,7 +7,7 @@ import AdminUsers from './admin/Users/AdminUsers';
 import './App.css';
 import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
-import Loading from './components/loading/Loading';
+import Loading from './components/loading/Loading.jsx';
 import PlaylistDetail from './components/VideoFunctionality/PlaylistDetail';
 import { UserData } from './context/UserContext';
 import About from './pages/About/About';
